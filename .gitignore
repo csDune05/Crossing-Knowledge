@@ -1,0 +1,73 @@
+# -----------------
+# Logs
+# -----------------
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------
+# Dependency directories
+# (covers backend/node_modules and frontend/node_modules)
+# -----------------
+node_modules/
+
+# -----------------
+# Build output
+# -----------------
+dist/
+build/
+.cache/
+.next/
+out/
+coverage/
+.nyc_output/
+storybook-static/
+
+# Vite / Rollup cache
+vite.config.ts.timestamp-*
+.vite/
+
+# -----------------
+# Environment variables
+# -----------------
+.env
+.env.*.local
+
+# If you have envs in subfolders too:
+backend/.env
+frontend/.env
+
+# -----------------
+# Editor & IDE stuff
+# -----------------
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+*.swp
+*.swm
+
+# -----------------
+# OS files
+# -----------------
+.DS_Store
+Thumbs.db
+
+# -----------------
+# Misc tool caches
+# -----------------
+.eslintcache
+.stylelintcache
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+
+# NestJS
+*.tsbuildinfo
+*.log
