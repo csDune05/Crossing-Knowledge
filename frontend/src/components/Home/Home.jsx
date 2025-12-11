@@ -6,9 +6,33 @@ import giaoDienThanThien from "../../assets/home/giao-dien-than-thien.png";
 import hocTapThongMinh from "../../assets/home/hoc-tap-thong-minh.png";
 import traiNghiemThuVi from "../../assets/home/trai-nghiem-thu-vi.png";
 import webPresenceImage from "../../assets/home/web-presence.png";
-import { Carousel } from "antd";
+import ronaldoAvatar from "../../assets/home/ronaldo.png";
+import anyQuestionImage from "../../assets/home/any-question.png";
+import { Carousel, Rate, Space, Input, Button } from "antd";
+import { FaFacebookF, FaTwitter } from "react-icons/fa6";
+import { FaLinkedin } from "react-icons/fa";
 
 import { CheckCircleOutlined } from "@ant-design/icons";
+
+const footerColumns = {
+  community: [
+    "Leaners",
+    "Parteners",
+    "Developers",
+    "Transactions",
+    "Blog",
+    "Teaching Center",
+  ],
+  quickLinks: [
+    "Home",
+    "Professional Education",
+    "Courses",
+    "Admissions",
+    "Testimonial",
+    "Programs",
+  ],
+  more: ["Press", "Investors", "Terms", "Privacy", "Help", "Contact"],
+};
 
 const Home = () => {
   return (
@@ -135,23 +159,142 @@ const Home = () => {
             <Carousel
               arrows
               className="evaluation-carousel"
-              infinite={false}
               autoplay
               slidesToShow={3}
             >
               <div>
-                <div className="carousel-item">content 1</div>
+                <div className="carousel-item ">
+                  <div className="avatar-wrapper">
+                    <img
+                      src={ronaldoAvatar}
+                      alt="Avatar"
+                      className="avatar-image"
+                    />
+                  </div>
+                  <div className="name">Nguyễn Lan</div>
+                  <div className="rating">
+                    <Rate disabled defaultValue={5} />
+                  </div>
+                  <div className="comment">
+                    Bé nói tiếng Anh rõ hơn và rất thích phần trò chơi
+                  </div>
+                </div>
               </div>
               <div>
-                <div className="carousel-item special">content 2</div>
+                <div className="carousel-item ">
+                  <div className="avatar-wrapper">
+                    <img
+                      src={ronaldoAvatar}
+                      alt="Avatar"
+                      className="avatar-image"
+                    />
+                  </div>
+                  <div className="name">Phương Thảo</div>
+                  <div className="rating">
+                    <Rate disabled defaultValue={5} />
+                  </div>
+                  <div className="comment">
+                    App dễ dùng, hình ảnh sinh động, con học mà không chán
+                  </div>
+                </div>
               </div>
               <div>
-                <div className="carousel-item">content 3</div>
+                <div className="carousel-item ">
+                  <div className="avatar-wrapper">
+                    <img
+                      src={ronaldoAvatar}
+                      alt="Avatar"
+                      className="avatar-image"
+                    />
+                  </div>
+                  <div className="name">Lê Hương</div>
+                  <div className="rating">
+                    <Rate disabled defaultValue={5} />
+                  </div>
+                  <div className="comment">
+                    AI chấm phát âm chuẩn, con sửa lỗi nhanh và tự tin hơn
+                  </div>
+                </div>
               </div>
               <div>
-                <div className="carousel-item special">content 4</div>
+                <div className="carousel-item ">
+                  <div className="avatar-wrapper">
+                    <img
+                      src={ronaldoAvatar}
+                      alt="Avatar"
+                      className="avatar-image"
+                    />
+                  </div>
+                  <div className="name">Ronaldo</div>
+                  <div className="rating">
+                    <Rate disabled defaultValue={5} />
+                  </div>
+                  <div className="comment">Binh thuong</div>
+                </div>
               </div>
             </Carousel>
+          </div>
+        </div>
+      </div>
+      <div className="any-question-container">
+        <div
+          className="content-wrapper"
+          style={{ backgroundImage: `url(${anyQuestionImage})` }}
+        >
+          <div className="question">Bạn có câu hỏi nào không?</div>
+          <div className="contact-us-text">
+            Đừng ngần ngại để lại số điện thoại của bạn. Chúng tôi sẽ liên hệ để
+            trao đổi về bất kỳ thắc mắc nào mà bạn có
+          </div>
+          <Space.Compact className="input-button-group">
+            <Input
+              className="phone-input"
+              placeholder="Nhập số điện thoại của bạn"
+            />
+            <Button className="submit-button" type="primary">
+              Subscribe
+            </Button>
+          </Space.Compact>
+        </div>
+      </div>
+      <div className="footer">
+        <div className="content-wrapper">
+          <div className="left">
+            <div className="logos">
+              <FaFacebookF className="social-icon" />
+              <FaTwitter className="social-icon" />
+              <FaLinkedin className="social-icon" />
+            </div>
+            <div className="text1">©2020 Crossing Knowledge.co</div>
+            <div className="text2">
+              Edudu is a registered <br /> trademark of Edudu.co
+            </div>
+          </div>
+          <div className="right">
+            <div className="community">
+              <div className="title">Community</div>
+              {footerColumns.community.map((item, index) => (
+                <div key={index} className="item">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="quick-links">
+              <div className="title">Quick links</div>
+              {footerColumns.quickLinks.map((item, index) => (
+                <div key={index} className="item">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="more">
+              <div className="title">More</div>
+              {footerColumns.more.map((item, index) => (
+                <div key={index} className="item">
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
