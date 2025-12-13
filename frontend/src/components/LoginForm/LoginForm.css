@@ -1,0 +1,95 @@
+.login-form-container {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+}
+
+.login-form-container .content-wrapper {
+  width: 30%;
+  height: 100%;
+
+  .logo-wrapper {
+    height: 80px;
+    display: flex;
+    justify-content: center;
+
+    .logo-image {
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .login-by-google {
+    margin-top: 20px;
+    height: 40px;
+    border: 1px solid #d9d9d9;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .icon-wapper {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .text {
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+  }
+
+  .divider {
+    .ant-divider-inner-text {
+      font-size: 10px;
+      color: #888;
+    }
+  }
+
+  .login-form {
+    .ant-form-item-label {
+      font-weight: 600;
+    }
+    .login-submit-btn {
+      height: 40px;
+      color: white;
+      background-color: #f15d41;
+      border-width: 1px 1px 3px 1px;
+      border-color: #000000;
+      border-radius: 10px;
+
+      &:hover {
+        background-color: #d94b33;
+        border-color: #000000;
+      }
+    }
+  }
+
+  .register-question {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #888;
+
+    .register-text:hover {
+      color: #f15d41;
+      cursor: pointer;
+    }
+  }
+}
