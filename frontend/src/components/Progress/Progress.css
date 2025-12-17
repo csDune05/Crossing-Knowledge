@@ -1,0 +1,147 @@
+.progress-page {
+  width: 100%;
+  background: #fff;
+}
+
+.progress-wrap {
+  width: 100%;
+  padding: 20px 28px 40px;
+}
+
+.progress-title {
+  margin: 8px 0 14px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.learned-card {
+  background: #fff;
+  width: 93%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 18px 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+
+.learned-item {
+  padding: 4px 24px;
+  border-right: 1px solid #eef2f7;
+}
+
+.learned-item[data-last="true"] {
+  border-right: none;
+}
+
+.learned-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.learned-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.learned-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.learned-label {
+  margin-top: 10px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  color: #9ca3af;
+  font-weight: 700;
+}
+
+.accuracy-panel {
+  width: 80%;
+  margin-top: 40px;
+  margin-left: 90px;
+  background: #fdeec9;
+  border-radius: 6px;
+  padding: 50px 26px 60px;
+}
+
+.accuracy-title {
+  text-align: center;
+  margin: 0 0 30px;
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 80px;
+}
+
+.accuracy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.accuracy-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ring {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-center {
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: #fdeec9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-text {
+  font-size: 40px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.accuracy-label {
+  margin-top: 14px;
+  font-size: 20px;
+  color: #111827;
+  font-weight: 500;
+  margin-top: 50px;
+}
+
+.progress-bottom-space {
+  height: 40px;
+}
+
+@media (max-width: 760px) {
+  .learned-card {
+    grid-template-columns: 1fr;
+  }
+
+  .learned-item {
+    border-right: none;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .learned-item[data-last="true"] {
+    border-bottom: none;
+  }
+
+  .accuracy-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
