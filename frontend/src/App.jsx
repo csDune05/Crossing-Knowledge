@@ -9,6 +9,7 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import ProgressPage from "./pages/ProgressPage.jsx";
 import SentenceConstructionPage from "./pages/SentenceConstructionPage.jsx";
 import SentenceConstructionLessonDetail from "./components/SentenceConstructionLessonDetail/SentenceConstructionLessonDetail.jsx";
+import ListenPage from "./pages/ListeningComprehensionPage.jsx";
 
 const App = () => {
   return (
@@ -19,8 +20,8 @@ const App = () => {
 
       <Route element={<AppLayout />}>
         <Route path="/progress" element={<ProgressPage />} />
-        <Route path="/vocab" element={<VocabPage />} />
-
+        <Route path="/vocabulary" element={<VocabPage />} />
+        <Route path="/listening-comprehension" element={<ListenPage />} />
         <Route
           path="/sentence-construction"
           element={<SentenceConstructionPage />}

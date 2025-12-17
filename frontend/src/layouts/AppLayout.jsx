@@ -15,8 +15,8 @@ const menu = [
     icon: icProgress,
     path: "/progress",
   },
-  { id: "vocab", label: "Học từ vựng", icon: icVocab, path: "/vocab" },
-  { id: "listening", label: "Luyện nghe phân biệt", icon: icListen, path: "" },
+  { id: "vocabulary", label: "Học từ vựng", icon: icVocab, path: "/vocabulary" },
+  { id: "listening-comprehension", label: "Luyện nghe phân biệt", icon: icListen, path: "/listening-comprehension" },
   {
     id: "sentence-construction",
     label: "Luyện diễn đạt",
@@ -33,8 +33,8 @@ export default function AppLayout() {
   const getActiveMenu = () => {
     const pathMap = {
       "/progress": "progress",
-      "/vocab": "vocab",
-      "/listening": "listening",
+      "/vocabulary": "vocabulary",
+      "/listening-comprehension": "listening-comprehension",
       "/sentence-construction": "sentence-construction",
       "/profile": "profile",
     };
