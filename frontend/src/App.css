@@ -1,4 +1,7 @@
+html,
+body,
 #root {
   margin: 0 auto;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  height: 100%;
 }

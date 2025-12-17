@@ -1,10 +1,14 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+// src/App.jsx
+import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage.jsx";
 import RegisterForm from "./components/RegisterForm/RegisterForm.jsx";
 import LoginForm from "./components/LoginForm/LoginForm.jsx";
 import AppLayout from "./layouts/AppLayout.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx";
 import VocabPage from "./pages/VocabPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import ProgressPage from "./pages/ProgressPage.jsx";
+import SentenceConstructionPage from "./pages/SentenceConstructionPage.jsx";
+import SentenceConstructionLessonDetail from "./components/SentenceConstructionLessonDetail/SentenceConstructionLessonDetail.jsx";
 
 const App = () => {
   return (
@@ -12,9 +16,21 @@ const App = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginForm />} />
       <Route path="/register" element={<RegisterForm />} />
+
       <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/progress" element={<ProgressPage />} />
         <Route path="/vocab" element={<VocabPage />} />
+
+        <Route
+          path="/sentence-construction"
+          element={<SentenceConstructionPage />}
+        />
+        <Route
+          path="/sentence-construction/:exerciseId"
+          element={<SentenceConstructionLessonDetail />}
+        />
+
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
     </Routes>
   );
