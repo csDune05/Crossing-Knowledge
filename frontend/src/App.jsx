@@ -4,7 +4,7 @@ import HomePage from "./pages/HomePage.jsx";
 import RegisterForm from "./components/RegisterForm/RegisterForm.jsx";
 import LoginForm from "./components/LoginForm/LoginForm.jsx";
 import AppLayout from "./layouts/AppLayout.jsx";
-import VocabPage from "./pages/VocabPage.jsx";
+import VocabPage from "./pages/VocabularyPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ProgressPage from "./pages/ProgressPage.jsx";
 import SentenceConstructionPage from "./pages/SentenceConstructionPage.jsx";
