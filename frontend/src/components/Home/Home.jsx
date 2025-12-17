@@ -1,5 +1,5 @@
 import "./Home.css";
-import logo from "../../assets/home/logo.png";
+import logo from "../../assets/logo.png";
 import startNow from "../../assets/home/start-now.png";
 import aboutUsImage from "../../assets/home/about-us.png";
 import giaoDienThanThien from "../../assets/home/giao-dien-than-thien.png";
@@ -11,8 +11,8 @@ import anyQuestionImage from "../../assets/home/any-question.png";
 import { Carousel, Rate, Space, Input, Button } from "antd";
 import { FaFacebookF, FaTwitter } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
-
 import { CheckCircleOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const footerColumns = {
   community: [
@@ -35,6 +35,12 @@ const footerColumns = {
 };
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  const handleSignUpButtonClick = () => {
+    navigate("/register");
+  };
+
   return (
     <div className="home-container">
       <div className="header">
@@ -44,7 +50,9 @@ const Home = () => {
         <div className="header-item home-page">Trang chủ</div>
         <div className="header-item about-us">About Us</div>
         <div className="header-item buttons">
-          <button className="btn signup-btn">Đăng ký</button>
+          <button className="btn signup-btn" onClick={handleSignUpButtonClick}>
+            Đăng ký
+          </button>
           <button className="btn login-btn">Đăng nhập</button>
         </div>
       </div>
