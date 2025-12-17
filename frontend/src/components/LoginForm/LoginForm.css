@@ -1,12 +1,12 @@
 .login-form-container {
   display: flex;
   justify-content: center;
-  padding: 50px 0;
+  align-items: center;
+  height: 100vh;
 }
 
 .login-form-container .content-wrapper {
   width: 30%;
-  height: 100%;
 
   .logo-wrapper {
     height: 80px;

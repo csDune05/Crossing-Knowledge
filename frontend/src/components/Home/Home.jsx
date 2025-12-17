@@ -37,6 +37,10 @@ const footerColumns = {
 const Home = () => {
   const navigate = useNavigate();
 
+  const handleLoginButtonClick = () => {
+    navigate("/login");
+  };
+
   const handleSignUpButtonClick = () => {
     navigate("/register");
   };
@@ -53,7 +57,9 @@ const Home = () => {
           <button className="btn signup-btn" onClick={handleSignUpButtonClick}>
             Đăng ký
           </button>
-          <button className="btn login-btn">Đăng nhập</button>
+          <button className="btn login-btn" onClick={handleLoginButtonClick}>
+            Đăng nhập
+          </button>
         </div>
       </div>
       <div className="home-page-container">

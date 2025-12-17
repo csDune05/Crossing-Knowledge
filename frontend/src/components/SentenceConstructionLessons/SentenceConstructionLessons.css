@@ -1,0 +1,30 @@
+.sentence-lessons-container {
+  padding: 24px 32px;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+
+  .sentence-lessons-header {
+    margin-bottom: 24px;
+
+    .sentence-lessons-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #222b5a;
+      margin: 0;
+    }
+  }
+
+  .sentence-lessons-loading,
+  .sentence-lessons-empty,
+  .sentence-lessons-error {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .sentence-lessons-error {
+    color: #ff4d4f;
+    font-weight: 500;
+  }
+}
