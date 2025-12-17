@@ -1,4 +1,4 @@
-import Vocab from "../components/Vocab/Vocab";
+import Vocab from "../components/Vocabulary/Vocabulary";
 
 const VocabPage = () => {
   return <Vocab />;
