@@ -5,10 +5,13 @@ import { PartialType } from '@nestjs/mapped-types';
 export class CreateSentenceConstructionDto {
   @IsArray()
   @ArrayMinSize(2)
+  @IsString({ each: true })
   scrambledWords: string[]; // Words in scrambled order
 
-  @IsString()
-  correctSentence: string; // The correct sentence
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  correctSentences: string[]; // Acceptable correct sentences
 
   @IsString()
   level: string; // e.g., "easy", "medium", "hard"
@@ -25,5 +28,6 @@ export class SubmitSentenceConstructionDto {
 
   @IsArray()
   @ArrayMinSize(1)
+  @IsString({ each: true })
   submittedWords: string[]; // Words submitted by the user in order
 }

@@ -9,6 +9,7 @@ import { PronunciationModule } from './pronunciation/pronunciation.module';
 import { ListeningComprehensionModule } from './listening-comprehension/listening-comprehension.module';
 import { SentenceConstructionModule } from './sentence-construction/sentence-construction.module';
 import { ProgressModule } from './progress/progress.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ProgressModule } from './progress/progress.module';
     ListeningComprehensionModule,
     SentenceConstructionModule,
     ProgressModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

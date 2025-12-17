@@ -20,10 +20,7 @@ export class ListeningComprehensionService {
   ) {}
 
   create(createDto: CreateListeningComprehensionDto) {
-    this.ensureValidOptionIndex(
-      createDto.options,
-      createDto.correctOptionIndex,
-    );
+    this.ensureValidQuestions(createDto.questions);
     const exercise = this.exerciseRepository.create(createDto);
     return this.exerciseRepository.save(exercise);
   }
@@ -38,16 +35,12 @@ export class ListeningComprehensionService {
 
   async update(id: number, updateDto: UpdateListeningComprehensionDto) {
     const existing = await this.findOneOrThrow(id);
-    const options = updateDto.options ?? existing.options;
-    const correctIndex =
-      updateDto.correctOptionIndex ?? existing.correctOptionIndex;
-
-    this.ensureValidOptionIndex(options, correctIndex);
+    const questions = updateDto.questions ?? existing.questions;
+    this.ensureValidQuestions(questions);
 
     await this.exerciseRepository.update(id, {
       ...updateDto,
-      options,
-      correctOptionIndex: correctIndex,
+      questions,
     });
 
     return this.findOneOrThrow(id);
@@ -61,19 +54,40 @@ export class ListeningComprehensionService {
 
   async submit(
     submitDto: SubmitListeningComprehensionDto,
-  ): Promise<{ correct: boolean; correctOptionIndex: number }> {
+  ): Promise<{ correct: boolean; correctOptionIndex: number; questionIndex: number }> {
     const exercise = await this.findOneOrThrow(submitDto.exerciseId);
+    const question = exercise.questions[submitDto.questionIndex];
+    if (!question) {
+      throw new BadRequestException('Question index is out of bounds');
+    }
+    if (
+      submitDto.selectedOptionIndex < 0 ||
+      submitDto.selectedOptionIndex >= question.options.length
+    ) {
+      throw new BadRequestException('Selected option index is out of bounds');
+    }
 
     const correct =
-      exercise.correctOptionIndex === submitDto.selectedOptionIndex;
+      question.correctOptionIndex === submitDto.selectedOptionIndex;
     // In a real app, you would also save the user's progress.
-    return { correct, correctOptionIndex: exercise.correctOptionIndex };
+    return {
+      correct,
+      correctOptionIndex: question.correctOptionIndex,
+      questionIndex: submitDto.questionIndex,
+    };
   }
 
-  private ensureValidOptionIndex(options: string[], index: number) {
-    if (index < 0 || index >= options.length) {
-      throw new BadRequestException('Correct option index is out of bounds');
-    }
+  private ensureValidQuestions(questions: { options: string[]; correctOptionIndex: number }[]) {
+    questions.forEach((question, index) => {
+      if (
+        question.correctOptionIndex < 0 ||
+        question.correctOptionIndex >= question.options.length
+      ) {
+        throw new BadRequestException(
+          `Correct option index is out of bounds for question ${index}`,
+        );
+      }
+    });
   }
 
   private async findOneOrThrow(id: number) {

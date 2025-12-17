@@ -8,8 +8,8 @@ export class SentenceConstructionExercise {
   @Column('simple-array')
   scrambledWords: string[]; // Words in scrambled order
 
-  @Column()
-  correctSentence: string; // The correct sentence
+  @Column('simple-json')
+  correctSentences: string[]; // Acceptable correct sentences
 
   @Column()
   level: string; // e.g., "easy", "medium", "hard"
