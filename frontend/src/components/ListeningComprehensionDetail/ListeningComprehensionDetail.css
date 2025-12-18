@@ -216,9 +216,9 @@
 }
 
 .lc-result-bar{
+  padding: 22px 30px;
+  border-radius: 20px;
   margin: 0 28px 20px;
-  padding: 16px 24px;
-  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -244,8 +244,8 @@
 }
 
 .lc-result-icon{
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: #fff;
   display: flex;
@@ -265,16 +265,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 650;
   color: #111827;
 }
 
 .lc-result-action{
-  padding: 12px 28px;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  padding: 16px 34px;
+  border-radius: 12px;
+  font-size: 18px;
   font-weight: 800;
   cursor: pointer;
   transition: transform 0.2s;
