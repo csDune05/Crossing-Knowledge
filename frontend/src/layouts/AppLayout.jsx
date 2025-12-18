@@ -31,15 +31,17 @@ export default function AppLayout() {
   const location = useLocation();
 
   const getActiveMenu = () => {
-    const pathMap = {
-      "/progress": "progress",
-      "/vocabulary": "vocabulary",
-      "/listening-comprehension": "listening-comprehension",
-      "/sentence-construction": "sentence-construction",
-      "/profile": "profile",
-    };
-    return pathMap[location.pathname] || "progress";
+    const path = location.pathname;
+
+    if (path.startsWith("/progress")) return "progress";
+    if (path.startsWith("/vocabulary")) return "vocabulary";
+    if (path.startsWith("/listening-comprehension")) return "listening-comprehension";
+    if (path.startsWith("/sentence-construction")) return "sentence-construction";
+    if (path.startsWith("/profile")) return "profile";
+
+    return "progress";
   };
+
 
   const activeMenu = getActiveMenu();
 
