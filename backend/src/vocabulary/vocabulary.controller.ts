@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { VocabularyService } from './vocabulary.service';
 import {
@@ -24,7 +25,10 @@ export class VocabularyController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('topic') topic?: string) {
+    if (topic) {
+      return this.vocabularyService.findByTopic(topic);
+    }
     return this.vocabularyService.findAll();
   }
 
