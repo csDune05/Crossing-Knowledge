@@ -87,7 +87,110 @@
 
 .sentence-construction-lesson-detail-container .result-area {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-around;
+  align-items: center;
   height: 20%;
-  background-color: #ddfade;
+  border-top: 1px solid rgb(207, 207, 207);
+  /* background-color: #ddfade; */
+
+  .result-text-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color: #4caf50; */
+    font-size: 35px;
+
+    .text {
+      margin-left: 5px;
+    }
+
+    .text--correct,
+    .icon--correct {
+      color: #3b8a3e;
+    }
+
+    .text--incorrect,
+    .icon--incorrect {
+      color: #ff0000;
+    }
+  }
+
+  .btn {
+    padding: 25px 40px;
+    font-size: 20px;
+    border-width: 1.5px 1.5px 3px 1.5px;
+    border-radius: 10px;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+
+  .btn--checkable {
+    background-color: #4caf50;
+    border: 1px solid green;
+    border-width: 1.5px 1.5px 3px 1.5px;
+    color: white;
+    font-weight: 700;
+
+    &:hover {
+      color: white;
+      background-color: #4caf50;
+      border: 1px solid green;
+      border-width: 1.5px 1.5px 3px 1.5px;
+    }
+  }
+
+  .btn--uncheckable {
+    background-color: white;
+    color: rgb(116, 116, 116);
+    font-weight: 700;
+    border: 1px solid rgb(207, 207, 207);
+    border-width: 1.5px 1.5px 3px 1.5px;
+
+    &:hover {
+      color: rgb(116, 116, 116);
+      background-color: white;
+      border: 1px solid rgb(207, 207, 207);
+      border-width: 1.5px 1.5px 3px 1.5px;
+    }
+  }
+
+  .btn--correct {
+    font-weight: 700;
+    background-color: #4caf50;
+    border: 1px solid green;
+    border-width: 1.5px 1.5px 3px 1.5px;
+    color: white;
+
+    &:hover {
+      color: white;
+      background-color: #4caf50;
+      border: 1px solid green;
+      border-width: 1.5px 1.5px 3px 1.5px;
+    }
+  }
+
+  .btn--incorrect {
+    font-weight: 700;
+    background-color: #ff0000;
+    border: 1px solid rgb(102, 0, 0);
+    border-width: 1.5px 1.5px 3px 1.5px;
+    color: white;
+
+    &:hover {
+      color: white;
+      background-color: #ff0000;
+      border: 1px solid rgb(102, 0, 0);
+      border-width: 1.5px 1.5px 3px 1.5px;
+    }
+  }
+}
+
+.sentence-construction-lesson-detail-container .result-area--correct {
+  background-color: #c5fdc7;
+}
+
+.sentence-construction-lesson-detail-container .result-area--incorrect {
+  background-color: #fdc5c5;
 }
