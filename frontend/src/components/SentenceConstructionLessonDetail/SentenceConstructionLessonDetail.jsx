@@ -1,205 +1,221 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom";
-import { Row, Col, Button, Spin } from "antd";
-
-import {
-  fetchSentenceExerciseDetailThunk,
-  submitSentenceAnswerThunk,
-  resetSentenceResult,
-} from "../../redux/slices/sentenceConstructionSlice";
-
-import {
-  currentSentenceExerciseSelector,
-  sentenceExerciseDetailLoadingSelector,
-  sentenceSubmittingSelector,
-  sentenceLastResultSelector,
-} from "../../redux/selectors/sentenceConstructionSelectors";
-
 import "./SentenceConstructionLessonDetail.css";
+import { useState } from "react";
+import { Button } from "antd";
+import { CheckCircleFilled } from "@ant-design/icons";
+import { ImCross } from "react-icons/im";
+import { useNavigate } from "react-router-dom";
 
-/* ===========================================================
-   CONTAINER: fetch exercise, handle routing
-   =========================================================== */
+const MOCK_SENTENCE_EXERCISES = [
+  {
+    id: 1,
+    level: "easy",
+    scrambledWords: ["Hôm", "nay,", "bé", "đi", "học."],
+    correctSentence: "Hôm nay, bé đi học.",
+  },
+  {
+    id: 2,
+    level: "easy",
+    scrambledWords: ["Bé", "đã", "làm", "bài", "tập."],
+    correctSentence: "Bé đã làm bài tập.",
+  },
+  // tạm thời các id khác dùng lại bài 1
+];
 
 const SentenceConstructionLessonDetail = () => {
-  const { exerciseId } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const numberOfQuestions = MOCK_SENTENCE_EXERCISES.length;
 
-  const exercise = useSelector(currentSentenceExerciseSelector);
-  const loadingExercise = useSelector(sentenceExerciseDetailLoadingSelector);
-  const submitting = useSelector(sentenceSubmittingSelector);
-  const lastResult = useSelector(sentenceLastResultSelector);
+  /* one lesson has several questions */
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const currentQuestion = MOCK_SENTENCE_EXERCISES[currentQuestionIndex];
 
-  useEffect(() => {
-    if (exerciseId) {
-      dispatch(fetchSentenceExerciseDetailThunk(Number(exerciseId)));
+  const scrambledWords = currentQuestion.scrambledWords;
+  /* [false, true, false,...] => true means the word has been selected*/
+  const [scrambledWordsStatus, setScrambleWordsStatus] = useState(
+    Array(scrambledWords.length).fill(false)
+  );
+  /* use index of scrambled words to display */
+  const [selectedWordsIndex, setSelectedWordsIndex] = useState([]);
+  const [checkableButton, setCheckableButton] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+
+  const resetForNextQuestion = (nextIndex) => {
+    const nextQuestion = MOCK_SENTENCE_EXERCISES[nextIndex];
+    const nextWords = nextQuestion.scrambledWords;
+
+    setScrambleWordsStatus(Array(nextWords.length).fill(false));
+    setSelectedWordsIndex([]);
+    setCheckableButton(false);
+    setIsCorrect(null);
+  };
+
+  const goNextQuestion = () => {
+    if (currentQuestionIndex >= numberOfQuestions - 1) {
+      navigate(-1);
+      return;
+    }
+    const nextIndex = currentQuestionIndex + 1;
+    setCurrentQuestionIndex(nextIndex);
+    resetForNextQuestion(nextIndex);
+  };
+
+  const handleScrambledWordClick = (index) => {
+    /* if the word is already selected, return */
+    if (scrambledWordsStatus[index]) {
+      return;
     }
 
-    return () => {
-      // clear result when leaving page
-      dispatch(resetSentenceResult());
-    };
-  }, [dispatch, exerciseId]);
+    // if previous result is incorrect, user edits → clear result UI
+    if (isCorrect === false) {
+      setIsCorrect(null);
+    }
 
-  const handleBackToList = () => {
-    navigate("/sentence-construction");
+    const newScrambledWordsStatus = scrambledWordsStatus.map((status, id) => {
+      if (id === index) {
+        return true;
+      } else return status;
+    });
+    setScrambleWordsStatus(newScrambledWordsStatus);
+
+    const newSelectedWordsIndex = [...selectedWordsIndex, index];
+    setSelectedWordsIndex(newSelectedWordsIndex);
+
+    /*check status of button */
+    setCheckableButton(newSelectedWordsIndex.length == scrambledWords.length);
   };
+
+  const handleSelectedWordClick = (index) => {
+    /*original index of that word*/
+    const scrambledWordIndex = selectedWordsIndex[index];
+
+    // if previous result is incorrect, user edits → clear result UI
+    if (isCorrect === false) {
+      setIsCorrect(null);
+    }
+
+    /*give the word back to the scrambled words array*/
+    const newScrambledWordsStatus = scrambledWordsStatus.map((status, id) => {
+      if (id === scrambledWordIndex) {
+        return false;
+      } else return status;
+    });
+    setScrambleWordsStatus(newScrambledWordsStatus);
+
+    /*delete that word from seleted words array*/
+    const newSelectedWordsIndex = selectedWordsIndex.filter(
+      (_, id) => id != index
+    );
+    setSelectedWordsIndex(newSelectedWordsIndex);
+
+    /*check status of button */
+    setCheckableButton(newSelectedWordsIndex.length == scrambledWords.length);
+  };
+
+  const handleButtonClick = () => {
+    // only correct → next
+    if (isCorrect === true) {
+      goNextQuestion();
+      return;
+    }
+
+    // not enough words → skip
+    if (!checkableButton) {
+      goNextQuestion();
+      return;
+    }
+
+    /*Check answer result */
+    const result = selectedWordsIndex
+      .map((idx) => scrambledWords[idx])
+      .join(" ");
+
+    setIsCorrect(result === currentQuestion.correctSentence);
+  };
+
+  const buttonText =
+    isCorrect === true ? "Tiếp" : checkableButton ? "Kiểm tra" : "Bỏ qua";
 
   return (
-    <div className="sentence-lesson-detail-container">
-      <Row justify="center">
-        <Col xs={24} md={20} lg={16}>
-          <div className="sentence-lesson-header">
-            <div className="sentence-lesson-back" onClick={handleBackToList}>
-              ← Quay lại danh sách bài
-            </div>
-            <h2 className="sentence-lesson-title">
-              Bé hãy sắp xếp các từ dưới đây thành một câu đúng.
-            </h2>
-          </div>
-
-          {loadingExercise || !exercise ? (
-            <div className="sentence-lesson-loading">
-              <Spin size="large" />
-            </div>
-          ) : (
-            <SentenceExercisePlayer
-              key={exercise.id} // remount when exercise changes
-              exercise={exercise}
-              submitting={submitting}
-              lastResult={lastResult}
-              onSubmit={(submittedWords) =>
-                dispatch(
-                  submitSentenceAnswerThunk({
-                    exerciseId: exercise.id,
-                    submittedWords,
-                  })
-                )
-              }
-            />
-          )}
-        </Col>
-      </Row>
-    </div>
-  );
-};
-
-/* ===========================================================
-   PRESENTATION: plays ONE sentence exercise
-   =========================================================== */
-
-const SentenceExercisePlayer = ({
-  exercise,
-  submitting,
-  lastResult,
-  onSubmit,
-}) => {
-  // init from props ONCE (thanks to key={exercise.id} on parent)
-  const [availableWords, setAvailableWords] = useState(() =>
-    exercise.scrambledWords.map((w, idx) => ({ id: idx, text: w }))
-  );
-  const [selectedWords, setSelectedWords] = useState([]);
-
-  const answerSlotsCount = exercise.scrambledWords.length;
-
-  const handleSelectWord = (id) => {
-    const wordObj = availableWords.find((w) => w.id === id);
-    if (!wordObj) return;
-    setAvailableWords((prev) => prev.filter((w) => w.id !== id));
-    setSelectedWords((prev) => [...prev, wordObj]);
-  };
-
-  const handleRemoveSelectedWord = (id) => {
-    const wordObj = selectedWords.find((w) => w.id === id);
-    if (!wordObj) return;
-    setSelectedWords((prev) => prev.filter((w) => w.id !== id));
-    setAvailableWords((prev) => [...prev, wordObj]);
-  };
-
-  const handleSubmit = () => {
-    const submittedWords = selectedWords.map((w) => w.text);
-    onSubmit(submittedWords);
-  };
-
-  return (
-    <>
-      {/* answer lines + slots */}
-      <div className="sentence-lesson-answer-area">
-        <div className="sentence-lesson-line" />
-        <div className="sentence-lesson-line" />
-
-        <div className="sentence-lesson-answer-slots">
-          {Array.from({ length: answerSlotsCount }).map((_, index) => {
-            const wordObj = selectedWords[index];
-            return (
-              <div
-                key={index}
-                className={"answer-slot" + (wordObj ? " filled" : "")}
-                onClick={() => wordObj && handleRemoveSelectedWord(wordObj.id)}
-              >
-                {wordObj?.text}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* word bank */}
-      <div className="sentence-lesson-word-bank">
-        {availableWords.map((word) => (
-          <button
-            key={word.id}
-            className="word-chip"
-            onClick={() => handleSelectWord(word.id)}
-          >
-            {word.text}
-          </button>
+    <div className="sentence-construction-lesson-detail-container">
+      <div className="progress-blocks">
+        {MOCK_SENTENCE_EXERCISES.map((question, index) => (
+          <div
+            key={question.id}
+            style={{ width: `${100 / numberOfQuestions}%` }}
+            className={`progress-block progress-block${
+              index < currentQuestionIndex ? "--completed" : "--pending"
+            }`}
+          ></div>
         ))}
       </div>
 
-      {/* footer: submit button */}
-      <div className="sentence-lesson-footer">
-        <Button
-          type="primary"
-          className="submit-btn"
-          onClick={handleSubmit}
-          loading={submitting}
-          disabled={selectedWords.length === 0}
-        >
-          KIỂM TRA
-        </Button>
+      <div className="question-content">
+        <div className="prompt">
+          Bé hãy sắp xếp các từ dưới đây thành một câu đúng.
+        </div>
+        <div className="main-question-wrapper">
+          <div className="selected-words-wrapper">
+            {selectedWordsIndex.map((scrambledWordIndex, index) => (
+              <div
+                className="selected-word"
+                key={index}
+                onClick={() => handleSelectedWordClick(index)}
+              >
+                {scrambledWords[scrambledWordIndex]}
+              </div>
+            ))}
+          </div>
+          <div className="scrambled-words-wrapper">
+            {scrambledWordsStatus.map((status, index) => (
+              <div
+                className={`scrambled-word scrambled-word${
+                  status ? "--selected" : ""
+                }`}
+                key={index}
+                onClick={() => handleScrambledWordClick(index)}
+              >
+                {status ? "" : scrambledWords[index]}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* result bar */}
-      {lastResult && (
-        <div
-          className={
-            "sentence-lesson-result-bar " +
-            (lastResult.correct ? "correct" : "incorrect")
-          }
-        >
-          {lastResult.correct ? (
+      <div
+        className={`result-area result-area${
+          isCorrect == true
+            ? "--correct"
+            : isCorrect == false
+              ? "--incorrect"
+              : ""
+        }`}
+      >
+        <div className="result-text-wrapper">
+          {isCorrect == true ? (
             <>
-              <span className="result-icon">✓</span>
-              <span className="result-text">
-                Tuyệt! Câu đúng là:{" "}
-                <strong>{lastResult.correctSentence}</strong>
-              </span>
+              <CheckCircleFilled className="icon icon--correct" />
+              <div className="text text--correct">Tuyệt!</div>
+            </>
+          ) : isCorrect == false ? (
+            <>
+              <ImCross className="icon icon--incorrect" />
+              <div className="text text--incorrect">Con thử lại nhé!!</div>
             </>
           ) : (
-            <>
-              <span className="result-icon">✕</span>
-              <span className="result-text">
-                Con thử lại nhé! Câu đúng là:{" "}
-                <strong>{lastResult.correctSentence}</strong>
-              </span>
-            </>
+            ""
           )}
         </div>
-      )}
-    </>
+
+        <Button
+          className={`btn 
+            btn${checkableButton ? "--checkable" : "--uncheckable"}
+            btn${isCorrect == true ? "--correct" : isCorrect == false ? "--incorrect" : ""}`}
+          onClick={handleButtonClick}
+        >
+          {buttonText}
+        </Button>
+      </div>
+    </div>
   );
 };
 
