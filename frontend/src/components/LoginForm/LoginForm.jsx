@@ -4,15 +4,18 @@ import { Divider, Form, Input, Button, message } from "antd";
 import { EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
-// import { useDispatch, useSelector } from "react-redux";
-
-// import { registerThunk } from "../../redux/slices/authSlice";
-// import { registerLoadingSelector } from "../../redux/selectors/authSelectors";
+import { useDispatch, useSelector } from "react-redux";
+import { loginThunk } from "../../redux/slices/authSlice";
+import {
+  loginLoadingSelector,
+  loginErrorSelector,
+} from "../../redux/selectors/authSelectors";
 
 const LoginForm = () => {
-  //   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  //   const loading = useSelector(registerLoadingSelector);
+  const loading = useSelector(loginLoadingSelector);
+  const loginError = useSelector(loginErrorSelector);
   const [form] = Form.useForm();
 
   const goToRegister = () => {
@@ -20,22 +23,20 @@ const LoginForm = () => {
   };
 
   const onFinish = async (values) => {
-    console.log("Received values:", values);
-    // const payload = {
-    //   username: (values.username || "").trim(),
-    //   email: (values.email || "").trim(),
-    //   password: values.password,
-    // };
+    const payload = {
+      username: (values.username || "").trim(), // backend accepts username or email
+      password: values.password,
+    };
 
     try {
-      //   const createdUser = await dispatch(registerThunk(payload)).unwrap();
-      message.success("Tạo tài khoản thành công!");
-      //   console.log("Created user:", createdUser);
+      const result = await dispatch(loginThunk(payload)).unwrap();
+      message.success("Đăng nhập thành công!");
 
       form.resetFields();
-      // TODO: navigate("/login");
+      console.log("Logged in user:", result.user);
+      navigate("/progress");
     } catch (errMsg) {
-      message.error(errMsg || "Đăng ký thất bại");
+      message.error(errMsg || "Đăng nhập thất bại");
     }
   };
 
@@ -125,11 +126,14 @@ const LoginForm = () => {
           <Button
             htmlType="submit"
             className="login-submit-btn"
-            // loading={loading}
+            loading={loading}
             block
           >
             Đăng nhập
           </Button>
+          {loginError ? (
+            <div style={{ color: "red", marginTop: 8 }}>{loginError}</div>
+          ) : null}
         </Form>
         <div className="register-question">
           Bạn chưa có tài khoản?{" "}

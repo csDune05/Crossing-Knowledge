@@ -14,7 +14,11 @@ export class UsersService {
   ) {}
 
   create(createUserDto: CreateUserDto) {
-    const user = this.userRepository.create(createUserDto);
+    const user = this.userRepository.create({
+      ...createUserDto,
+      fullName: createUserDto.fullName ?? '',
+      phone: createUserDto.phone ?? '',
+    });
     return this.hashAndSave(user);
   }
 
