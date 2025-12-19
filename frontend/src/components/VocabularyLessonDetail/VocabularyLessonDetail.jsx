@@ -22,53 +22,168 @@ const toGithubRaw = (url = '') =>
     ? url.replace('https://github.com/', 'https://raw.githubusercontent.com/').replace('/blob/', '/')
     : url;
 
-// Normalize tiếng Việt.
-const normalizeText = (s = '') =>
-  s
+const toNFC = (s = '') => (s || '').normalize('NFC');
+
+const normalizeCompare = (s = '') =>
+  toNFC(s)
     .toLowerCase()
-    .normalize('NFD')
-    // .replace(/[\u0300-\u036f]/g, '')
-    // .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
-// So sánh gọn: exact/contains => correct, còn lại dùng Levenshtein để ra correct/close/wrong
-const judgeSpeech = (expected, alternatives = []) => {
-  const exp = normalizeText(expected);
-  const cands = alternatives.map(normalizeText).filter(Boolean);
+const stripVietnameseDiacritics = (s = '') =>
+  toNFC(s)
+    .toLowerCase()
+    .replace(/đ/g, 'd')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-  if (!exp || cands.length === 0) return 'wrong';
+const levenshtein = (a, b) => {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
 
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+};
+
+const similarity = (a, b) => {
+  const aa = normalizeCompare(a);
+  const bb = normalizeCompare(b);
+  if (!aa && !bb) return 1;
+  if (!aa || !bb) return 0;
+  return 1 - levenshtein(aa, bb) / Math.max(aa.length, bb.length);
+};
+
+// Chấm: exact/contains => correct, còn lại dùng similarity => close/wrong
+const judgeSpeechDetailed = (expected, alternatives = []) => {
+  const exp = normalizeCompare(expected);
+  const cands = alternatives.map(normalizeCompare).filter(Boolean);
+
+  if (!exp || cands.length === 0) return { result: 'wrong', bestAlt: cands[0] || '', bestScore: 0 };
+
+  // Ưu tiên đúng tuyệt đối / chứa nhau
   for (const c of cands) {
-    if (c === exp) return 'correct';
-    if (c.includes(exp) || exp.includes(c)) return 'correct';
+    if (c === exp) return { result: 'correct', bestAlt: c, bestScore: 1 };
+    if (c.includes(exp) || exp.includes(c)) return { result: 'correct', bestAlt: c, bestScore: 0.95 };
   }
 
-  const dist = (a, b) => {
-    if (a === b) return 0;
-    if (!a) return b.length;
-    if (!b) return a.length;
+  // Chọn câu nói gần nhất
+  let bestAlt = cands[0];
+  let bestScore = similarity(exp, bestAlt);
 
-    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-    for (let i = 1; i <= a.length; i++) {
-      const cur = [i];
-      for (let j = 1; j <= b.length; j++) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
-      }
-      prev = cur;
+  for (const c of cands) {
+    const sc = similarity(exp, c);
+    if (sc > bestScore) {
+      bestScore = sc;
+      bestAlt = c;
     }
-    return prev[b.length];
-  };
+  }
 
-  const sim = (a, b) => 1 - dist(a, b) / Math.max(a.length, b.length);
+  if (bestScore >= 0.8) return { result: 'correct', bestAlt, bestScore };
+  if (bestScore >= 0.6) return { result: 'close', bestAlt, bestScore };
+  return { result: 'wrong', bestAlt, bestScore };
+};
 
-  let bestScore = 0;
-  for (const c of cands) bestScore = Math.max(bestScore, sim(exp, c));
+const quote = (s) => `“${s}”`;
 
-  if (bestScore >= 0.8) return 'correct';
-  if (bestScore >= 0.6) return 'close';
-  return 'wrong';
+const findAccentDiffTokens = (expected, spoken) => {
+  const expTokens = normalizeCompare(expected).split(' ').filter(Boolean);
+  const spTokens = normalizeCompare(spoken).split(' ').filter(Boolean);
+
+  const diffs = new Set();
+
+  const L = Math.min(expTokens.length, spTokens.length);
+  for (let i = 0; i < L; i++) {
+    const e = expTokens[i];
+    const r = spTokens[i];
+
+    if (!e || !r) continue;
+
+    const eBase = stripVietnameseDiacritics(e);
+    const rBase = stripVietnameseDiacritics(r);
+
+    // Base giống nhau nhưng khác dấu
+    if (eBase && eBase === rBase && e !== r) diffs.add(e);
+  }
+
+  // Trường hợp lệch vị trí: dò theo base
+  if (diffs.size === 0) {
+    const spBaseSet = new Set(spTokens.map(stripVietnameseDiacritics).filter(Boolean));
+    for (const e of expTokens) {
+      const eBase = stripVietnameseDiacritics(e);
+      if (!eBase) continue;
+
+      if (spBaseSet.has(eBase)) {
+        // nếu có base nhưng token đúng dấu không thấy trong spoken => coi là thiếu dấu
+        if (!spTokens.includes(e)) diffs.add(e);
+      }
+    }
+  }
+
+  return Array.from(diffs);
+};
+
+const findMissingTokens = (expected, spoken) => {
+  const expTokens = normalizeCompare(expected).split(' ').filter(Boolean);
+  const spTokens = normalizeCompare(spoken).split(' ').filter(Boolean);
+
+  const spBase = new Set(spTokens.map(stripVietnameseDiacritics).filter(Boolean));
+  const missing = [];
+
+  for (const e of expTokens) {
+    const eBase = stripVietnameseDiacritics(e);
+    if (!eBase) continue;
+    if (!spBase.has(eBase)) missing.push(e);
+  }
+  return missing;
+};
+
+// NLP gợi ý dưới dòng đánh giá
+const buildNlpHint = (expected, spoken, resultType) => {
+  const exp = normalizeCompare(expected);
+  const sp = normalizeCompare(spoken);
+  if (!exp || !sp) return '';
+
+  const expBase = stripVietnameseDiacritics(exp);
+  const spBase = stripVietnameseDiacritics(sp);
+
+  // Trường hợp chỉ sai dấu/đặc trưng tiếng Việt (base giống nhau)
+  if (expBase && expBase === spBase && exp !== sp) {
+    const accentDiffs = findAccentDiffTokens(exp, sp);
+    if (accentDiffs.length === 1) return `Gợi ý: Con chú ý dấu của ${quote(accentDiffs[0])}.`;
+    if (accentDiffs.length > 1)
+      return `Gợi ý: Con chú ý dấu của ${accentDiffs.map(quote).join(', ')}.`;
+    return `Gợi ý: Con chú ý dấu trong ${quote(expected)}.`;
+  }
+
+  if (resultType === 'close') {
+    const accentDiffs = findAccentDiffTokens(exp, sp);
+    if (accentDiffs.length === 1) return `Gợi ý: Con chú ý dấu của ${quote(accentDiffs[0])}.`;
+    if (accentDiffs.length > 1)
+      return `Gợi ý: Con chú ý dấu của ${accentDiffs.map(quote).join(', ')}.`;
+
+    const missing = findMissingTokens(exp, sp);
+    if (missing.length === 1) return `Gợi ý: Con đang thiếu từ ${quote(missing[0])}.`;
+    if (missing.length > 1) return `Gợi ý: Con đang thiếu các từ ${missing.map(quote).join(', ')}.`;
+
+    return `Gợi ý: Thử đọc rõ hơn: ${quote(expected)}.`;
+  }
+
+  if (resultType === 'wrong') {
+    return `Gợi ý: Con nghe lại và đọc: ${quote(expected)}.`;
+  }
+
+  return '';
 };
 
 export default function VocabularyLessonDetail({ lesson, onBack }) {
@@ -79,8 +194,11 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
 
   const [isRecording, setIsRecording] = useState(false);
   const [checkResult, setCheckResult] = useState(null);
+
   const [recognizedText, setRecognizedText] = useState('');
   const recognizedAlternativesRef = useRef([]);
+
+  const [nlpHint, setNlpHint] = useState('');
 
   const recognitionRef = useRef(null);
   const audioPlayerRef = useRef(null);
@@ -145,6 +263,7 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
     setCheckResult(null);
     setRecognizedText('');
     recognizedAlternativesRef.current = [];
+    setNlpHint('');
   }, []);
 
   const cancelRecording = useCallback(() => {
@@ -216,11 +335,16 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
 
     if (!expected) {
       setCheckResult('close');
+      setNlpHint('');
       return;
     }
 
-    const result = judgeSpeech(expected, alts);
+    const { result, bestAlt } = judgeSpeechDetailed(expected, alts);
     setCheckResult(result);
+
+    // NLP hint dưới dòng đánh giá
+    const hint = buildNlpHint(expected, bestAlt || recognizedText, result);
+    setNlpHint(hint);
   }, [currentWord?.word, recognizedText]);
 
   const goToNextWord = useCallback(() => {
@@ -276,11 +400,7 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
       <div className="vocab-main-content">
         <div className="vocab-image-container">
           {currentWord?.image ? (
-            <img
-              src={toGithubRaw(currentWord.image)}
-              alt={currentWord.word}
-              className="vocab-large-image"
-            />
+            <img src={toGithubRaw(currentWord.image)} alt={currentWord.word} className="vocab-large-image" />
           ) : null}
         </div>
 
@@ -319,10 +439,6 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
 
               {isRecording ? <span className="recording-text">Đang nghe...</span> : null}
             </div>
-
-            {/* {recognizedText && !isRecording ? (
-              <div className="recognized-text">Con nói: {recognizedText}</div>
-            ) : null} */}
           </div>
         </div>
       </div>
@@ -333,12 +449,7 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
             TỪ TRƯỚC
           </button>
 
-          <button
-            type="button"
-            className="btn-check"
-            onClick={checkPronunciation}
-            disabled={!recognizedText || isRecording}
-          >
+          <button type="button" className="btn-check" onClick={checkPronunciation} disabled={!recognizedText || isRecording}>
             KIỂM TRA
           </button>
         </div>
@@ -348,7 +459,11 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
             <span className="result-icon">
               <img src={resultMeta.icon} alt={checkResult} className="result-icon-img" />
             </span>
-            <span className="result-text">{resultMeta.text}</span>
+
+            <div className="result-text-block">
+              <div className="result-text">{resultMeta.text}</div>
+              {nlpHint ? <div className="result-hint">{nlpHint}</div> : null}
+            </div>
           </div>
 
           <button

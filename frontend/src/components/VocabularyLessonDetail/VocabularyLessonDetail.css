@@ -334,3 +334,39 @@
   0%, 100% { height: 24px; }
   50% { height: 42px; }
 }
+
+.result-content {
+  display: flex;
+  align-items: center; 
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.result-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.result-text {
+  font-size: 30px;
+  font-weight: 650;
+  color: #111827;
+
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  line-height: 1.15;
+}
+
+.result-hint {
+  font-size: 18px;
+  font-weight: 650;
+  color: #374151;
+  line-height: 1.25;
+
+  word-break: break-word;
+}

@@ -138,6 +138,13 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = () => {
+    dispatch(logout());
+    message.success("Đã đăng xuất");
+    navigate("/login");
+  };
+
+
   if (loading) {
     return (
       <div className="profile-page">
@@ -230,7 +237,11 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="profile-footer">
+                <div className="profile-footer">
+          <Button className="logout-btn" onClick={handleLogout}>
+            Đăng xuất
+          </Button>
+
           <Popconfirm
             title="Xóa tài khoản?"
             description="Hành động này không thể hoàn tác."
