@@ -1,6 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { sign } from 'jsonwebtoken';
+import type { Secret, SignOptions } from 'jsonwebtoken';
+import type { StringValue } from 'ms';
+
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -11,10 +14,19 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  private parseExpiresIn(value: string): SignOptions['expiresIn'] {
+    // Allow "604800" (seconds) or "7d", "1h", "15m", ...
+    if (/^\d+$/.test(value)) return Number(value);
+    return value as StringValue;
+  }
+
   private signToken(payload: { sub: number; username: string; email: string }) {
-    const secret = this.configService.get<string>('JWT_SECRET') ?? 'dev-secret';
-    const expiresIn =
-      this.configService.get<string>('JWT_EXPIRES_IN') ?? '7d';
+    const secret = (this.configService.get<string>('JWT_SECRET') ??
+      'dev-secret') as Secret;
+
+    const raw = this.configService.get<string>('JWT_EXPIRES_IN') ?? '7d';
+    const expiresIn = this.parseExpiresIn(raw);
+
     return sign(payload, secret, { expiresIn });
   }
 
@@ -22,17 +34,13 @@ export class AuthService {
     const user = await this.usersService.findByIdentifierWithPassword(
       loginDto.username,
     );
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isValid = await this.usersService.validatePassword(
       user,
       loginDto.password,
     );
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
     const token = this.signToken({
       sub: user.id,
@@ -46,6 +54,8 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
+        fullName: user.fullName ?? '',
+        phone: user.phone ?? '',
       },
     };
   }
@@ -58,19 +68,17 @@ export class AuthService {
     phone: string;
   }) {
     const user = await this.usersService.create(createDto);
+
     const token = this.signToken({
       sub: user.id,
       username: user.username,
       email: user.email,
     });
-    return {
-      token,
-      user,
-    };
+
+    return { token, user };
   }
 
   async logout() {
-    // JWT is stateless; client should discard token. Hook for future blacklist if needed.
     return { success: true };
   }
 }

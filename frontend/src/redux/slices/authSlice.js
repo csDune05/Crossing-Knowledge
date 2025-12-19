@@ -8,6 +8,7 @@ export const registerThunk = createAsyncThunk(
     try {
       const data = await authApi.register(payload); // { token, user }
       localStorage.setItem("ck_token", data.token);
+      localStorage.setItem("ck_user", JSON.stringify(data.user)); // ✅ save user
       return data;
     } catch (err) {
       // Nest errors often: err.response.data.message
@@ -27,6 +28,7 @@ export const loginThunk = createAsyncThunk(
     try {
       const data = await authApi.login(payload); // { token, user }
       localStorage.setItem("ck_token", data.token);
+      localStorage.setItem("ck_user", JSON.stringify(data.user)); // ✅ save user
       return data;
     } catch (err) {
       const msg =
@@ -42,9 +44,11 @@ const initialState = {
   registerLoading: false,
   registerError: null,
   registeredUser: null, // user returned by POST /auth/register
+
   loginLoading: false,
   loginError: null,
-  authUser: null,
+
+  authUser: null, // current logged in user
 };
 
 const authSlice = createSlice({
@@ -58,13 +62,32 @@ const authSlice = createSlice({
     clearLoginState(state) {
       state.loginError = null;
     },
+
+    // ✅ restore authUser from localStorage on refresh
+    hydrateAuthFromStorage(state) {
+      const token = localStorage.getItem("ck_token");
+      const rawUser = localStorage.getItem("ck_user");
+
+      if (token && rawUser) {
+        try {
+          state.authUser = JSON.parse(rawUser);
+        } catch {
+          state.authUser = null;
+        }
+      } else {
+        state.authUser = null;
+      }
+    },
+
     logout(state) {
       state.authUser = null;
       localStorage.removeItem("ck_token");
+      localStorage.removeItem("ck_user"); // ✅ remove user too
     },
   },
   extraReducers: (builder) => {
     builder
+      // register
       .addCase(registerThunk.pending, (state) => {
         state.registerLoading = true;
         state.registerError = null;
@@ -73,11 +96,15 @@ const authSlice = createSlice({
         state.registerLoading = false;
         state.registeredUser = action.payload.user;
         state.authUser = action.payload.user;
+
+        // ✅ keep storage in sync (in case you later remove from thunk)
+        localStorage.setItem("ck_user", JSON.stringify(action.payload.user));
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.registerLoading = false;
         state.registerError = action.payload || "Register failed";
       })
+
       // login
       .addCase(loginThunk.pending, (state) => {
         state.loginLoading = true;
@@ -86,6 +113,9 @@ const authSlice = createSlice({
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.loginLoading = false;
         state.authUser = action.payload.user;
+
+        // ✅ keep storage in sync
+        localStorage.setItem("ck_user", JSON.stringify(action.payload.user));
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loginLoading = false;
@@ -94,6 +124,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearRegisterState, clearLoginState, logout } =
-  authSlice.actions;
+export const {
+  clearRegisterState,
+  clearLoginState,
+  hydrateAuthFromStorage, // ✅ export
+  logout,
+} = authSlice.actions;
+
 export default authSlice.reducer;
