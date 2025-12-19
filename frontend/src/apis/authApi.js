@@ -1,10 +1,8 @@
 import axiosClient from "./axiosClient";
 
 const authApi = {
-  // Your current backend is UsersController: POST /users
-  register: (payload) => axiosClient.post("/users", payload),
-
-  // login: (payload) => axiosClient.post("/auth/login", payload), // later
+  register: (payload) => axiosClient.post("/auth/register", payload),
+  login: (payload) => axiosClient.post("/auth/login", payload),
 };
 
 export default authApi;

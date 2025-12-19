@@ -20,10 +20,13 @@ const App = () => {
 
       <Route element={<AppLayout />}>
         <Route path="/progress" element={<ProgressPage />} />
+        
         <Route path="/vocabulary" element={<VocabPage />} />
         <Route path="/vocabulary/:lessonId" element={<VocabPage />} />
         
         <Route path="/listening-comprehension" element={<ListenPage />} />
+        <Route path="/listening-comprehension/:lessonId" element={<ListenPage />} />
+
         <Route
           path="/sentence-construction"
           element={<SentenceConstructionPage />}

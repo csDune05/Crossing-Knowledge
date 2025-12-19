@@ -54,13 +54,18 @@
 }
 
 .vocab-main-content {
-  flex: 1;
-  display: flex;
-  gap: 60px;
-  padding: 20px 40px;
-  align-items: center;
-  overflow: hidden;
-  min-height: 0;
+  flex: 1;                 
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  display: flex;            
+  align-items: center;      
+  justify-content: center;  
+  gap: 28px;
+
+  padding: 20px 28px;
+  box-sizing: border-box;
 }
 
 .vocab-image-container {
@@ -82,12 +87,12 @@
 }
 
 .vocab-audio-section {
-  flex: 1;
+  flex: 0 1 700px;
+  width: min(700px, 100%);
   display: flex;
   flex-direction: column;
   gap: 24px;
   justify-content: center;
-  max-width: 700px;
 }
 
 .vocab-audio-card {
@@ -226,7 +231,7 @@
 
 .result-bar {
   margin: 0 28px 20px;        
-  padding: 16px 24px;        
+  padding: 22px 30px;        
   border-radius: 16px;
 
   display: flex;
@@ -258,8 +263,8 @@
 }
 
 .result-icon {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: #fff;
   display: flex;
@@ -274,17 +279,17 @@
 }
 
 .result-text {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 30px;
+  font-weight: 650;
   color: #111827;
 }
 
 .btn-next,
 .btn-retry {
-  padding: 12px 28px;
+  padding: 16px 34px;  
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s;

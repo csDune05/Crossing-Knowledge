@@ -17,103 +17,58 @@ const RESULT_META = {
   wrong: { barClass: 'wrong', icon: incorrectIcon, text: 'Con thử lại nhé!', actionText: 'THỬ LẠI' },
 };
 
-const LETTER_ALIASES = {
-  a: ['a', 'ay'],
-  b: ['b', 'be', 'bee', 'bo'],
-  c: ['c', 'xe', 'ce', 'see', 'sea', 'co'],
-  d: ['d', 'de', 'dee', 'do'],
-  e: ['e', 'ee'],
-  f: ['f', 'ef', 'ep', 'fo'],
-  g: ['g', 'gee', 'go', 'ji'],
-  h: ['h', 'aitch', 'hat', 'ho'],
-  i: ['i', 'eye'],
-  j: ['j', 'jay', 'gi'],
-  k: ['k', 'kay', 'ka', 'ca'],
-  l: ['l', 'el', 'lo'],
-  m: ['m', 'em', 'mo'],
-  n: ['n', 'en', 'no'],
-  o: ['o', 'oh'],
-  p: ['p', 'pee', 'pe', 'po'],
-  q: ['q', 'cue', 'queue', 'quy'],
-  r: ['r', 'ar', 'are', 'ro'],
-  s: ['s', 'ess', 'et', 'es', 'so'],
-  t: ['t', 'tee', 'te', 'to'],
-  u: ['u', 'you'],
-  v: ['v', 'vee', 've', 'vo'],
-  w: ['w', 'double u', 'double you', 've kep', 'vekep'],
-  x: ['x', 'ex', 'ich'],
-  y: ['y', 'why', 'i dai', 'idai', 'y dai', 'ydai'],
-  z: ['z', 'zee', 'zed', 'det', 'zet'],
-};
-
 const toGithubRaw = (url = '') =>
   url && url.includes('github.com') && url.includes('/blob/')
     ? url.replace('https://github.com/', 'https://raw.githubusercontent.com/').replace('/blob/', '/')
     : url;
 
+// Normalize tiếng Việt.
 const normalizeText = (s = '') =>
   s
     .toLowerCase()
-    .replace(/đ/g, 'd')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
+    // .replace(/[\u0300-\u036f]/g, '')
+    // .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
-const levenshtein = (a = '', b = '') => {
-  const x = a || '';
-  const y = b || '';
-  const n = x.length;
-  const m = y.length;
-  if (n === 0) return m;
-  if (m === 0) return n;
-
-  const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
-  for (let i = 0; i <= n; i++) dp[i][0] = i;
-  for (let j = 0; j <= m; j++) dp[0][j] = j;
-
-  for (let i = 1; i <= n; i++) {
-    for (let j = 1; j <= m; j++) {
-      const cost = x[i - 1] === y[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
-    }
-  }
-  return dp[n][m];
-};
-
-const similarity = (a = '', b = '') => {
-  const x = normalizeText(a);
-  const y = normalizeText(b);
-  if (!x || !y) return 0;
-  const dist = levenshtein(x, y);
-  return 1 - dist / Math.max(x.length, y.length);
-};
-
-const getBestMatch = (expected, alternatives) => {
+// So sánh gọn: exact/contains => correct, còn lại dùng Levenshtein để ra correct/close/wrong
+const judgeSpeech = (expected, alternatives = []) => {
   const exp = normalizeText(expected);
-  const isLetter = /^[a-z]$/i.test((expected || '').trim());
+  const cands = alternatives.map(normalizeText).filter(Boolean);
 
-  const candidates = (alternatives || []).flatMap((t) => {
-    const norm = normalizeText(t);
-    if (!norm) return [];
-    const tokens = norm.split(' ');
-    return [norm, ...tokens];
-  });
+  if (!exp || cands.length === 0) return 'wrong';
 
-  if (isLetter) {
-    const aliases = LETTER_ALIASES[exp] || [exp];
-    for (const c of candidates) {
-      if (aliases.includes(c)) return { score: 1, heard: c };
+  for (const c of cands) {
+    if (c === exp) return 'correct';
+    if (c.includes(exp) || exp.includes(c)) return 'correct';
+  }
+
+  const dist = (a, b) => {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+      }
+      prev = cur;
     }
-  }
+    return prev[b.length];
+  };
 
-  let best = { score: 0, heard: '' };
-  for (const c of candidates) {
-    const sc = similarity(exp, c);
-    if (sc > best.score) best = { score: sc, heard: c };
-  }
-  return best;
+  const sim = (a, b) => 1 - dist(a, b) / Math.max(a.length, b.length);
+
+  let bestScore = 0;
+  for (const c of cands) bestScore = Math.max(bestScore, sim(exp, c));
+
+  if (bestScore >= 0.8) return 'correct';
+  if (bestScore >= 0.6) return 'close';
+  return 'wrong';
 };
 
 export default function VocabularyLessonDetail({ lesson, onBack }) {
@@ -122,17 +77,10 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [recordedAudio, setRecordedAudio] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [checkResult, setCheckResult] = useState(null);
-
   const [recognizedText, setRecognizedText] = useState('');
   const recognizedAlternativesRef = useRef([]);
-
-  const mediaRecorderRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const discardRecordingRef = useRef(false);
 
   const recognitionRef = useRef(null);
   const audioPlayerRef = useRef(null);
@@ -170,15 +118,8 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
         audioPlayerRef.current.pause();
         audioPlayerRef.current.src = '';
       }
-
-      if (recordedAudio) URL.revokeObjectURL(recordedAudio);
-
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-        mediaStreamRef.current = null;
-      }
     };
-  }, [recordedAudio]);
+  }, []);
 
   const playWordAudio = useCallback(
     (rate = 1) => {
@@ -201,212 +142,86 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
   );
 
   const resetAttempt = useCallback(() => {
-    setRecordedAudio((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
     setCheckResult(null);
     setRecognizedText('');
     recognizedAlternativesRef.current = [];
   }, []);
 
-  const listenOnce = useCallback((timeoutMs = 3500) => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return Promise.resolve([]);
-
-    return new Promise((resolve) => {
-      const rec = new SR();
-      let done = false;
-
-      const finish = (alts = []) => {
-        if (done) return;
-        done = true;
-        try {
-          rec.stop();
-        } catch (_) {}
-        resolve(alts);
-      };
-
-      const timer = setTimeout(() => finish([]), timeoutMs);
-
-      rec.lang = 'vi-VN';
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.maxAlternatives = 5;
-
-      rec.onresult = (event) => {
-        clearTimeout(timer);
-        const alts = [];
-        for (let i = 0; i < event.results.length; i++) {
-          for (let j = 0; j < event.results[i].length; j++) {
-            alts.push(event.results[i][j].transcript);
-          }
-        }
-        finish(alts);
-      };
-
-      rec.onerror = () => {
-        clearTimeout(timer);
-        finish([]);
-      };
-
-      try {
-        rec.start();
-      } catch (_) {
-        clearTimeout(timer);
-        finish([]);
-      }
-    });
-  }, []);
-
   const cancelRecording = useCallback(() => {
-    discardRecordingRef.current = true;
-
     try {
       recognitionRef.current?.stop?.();
     } catch (_) {}
-
-    try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-    } catch (_) {}
-
     setIsRecording(false);
   }, []);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(() => {
+    resetAttempt();
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      alert('Trình duyệt không hỗ trợ SpeechRecognition (Web Speech API).');
+      return;
+    }
+
+    const rec = new SR();
+    recognitionRef.current = rec;
+
+    rec.lang = 'vi-VN';
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.maxAlternatives = 5;
+
+    rec.onresult = (e) => {
+      const res = e.results[e.results.length - 1];
+      const alts = Array.from(res)
+        .map((a) => (a.transcript || '').trim())
+        .filter(Boolean);
+
+      recognizedAlternativesRef.current = alts;
+      setRecognizedText(alts[0] || '');
+    };
+
+    rec.onerror = () => setIsRecording(false);
+    rec.onend = () => setIsRecording(false);
+
+    setIsRecording(true);
     try {
-      resetAttempt();
-      discardRecordingRef.current = false;
-
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SR) {
-        const rec = new SR();
-        recognitionRef.current = rec;
-
-        rec.lang = 'vi-VN';
-        rec.continuous = false;
-        rec.interimResults = false;
-        rec.maxAlternatives = 5;
-
-        rec.onresult = (event) => {
-          const alts = [];
-          for (let i = 0; i < event.results.length; i++) {
-            for (let j = 0; j < event.results[i].length; j++) {
-              alts.push(event.results[i][j].transcript);
-            }
-          }
-          recognizedAlternativesRef.current = alts;
-          setRecognizedText(alts[0] || '');
-        };
-
-        rec.onerror = () => {};
-        try {
-          rec.start();
-        } catch (_) {}
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data) audioChunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = () => {
-        const s = mediaStreamRef.current;
-        if (s) {
-          s.getTracks().forEach((t) => t.stop());
-          mediaStreamRef.current = null;
-        }
-
-        if (discardRecordingRef.current) {
-          audioChunksRef.current = [];
-          return;
-        }
-
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        setRecordedAudio((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return audioUrl;
-        });
-      };
-
-      recorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      alert('Không thể truy cập microphone: ' + err.message);
+      rec.start();
+    } catch (_) {
+      setIsRecording(false);
     }
   }, [resetAttempt]);
 
   const stopRecording = useCallback(() => {
-    discardRecordingRef.current = false;
-
     try {
       recognitionRef.current?.stop?.();
     } catch (_) {}
-
-    try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-    } catch (_) {}
-
     setIsRecording(false);
   }, []);
 
-  const checkPronunciation = useCallback(async () => {
-    if (!recordedAudio) {
-      alert('Vui lòng ghi âm trước');
+  const checkPronunciation = useCallback(() => {
+    const expected = (currentWord?.word || '').trim();
+
+    const alts =
+      recognizedAlternativesRef.current?.length > 0
+        ? recognizedAlternativesRef.current
+        : recognizedText
+          ? [recognizedText]
+          : [];
+
+    if (!alts.length) {
+      alert('Vui lòng bấm mic và nói trước.');
       return;
     }
 
-    const expected = (currentWord?.word || '').trim();
     if (!expected) {
       setCheckResult('close');
       return;
     }
 
-    let alts = recognizedAlternativesRef.current || [];
-
-    if (!alts.length) {
-      alts = await listenOnce(3500);
-      recognizedAlternativesRef.current = alts;
-      setRecognizedText(alts[0] || '');
-    }
-
-    if (!alts.length) {
-      setCheckResult('close');
-      return;
-    }
-
-    const best = getBestMatch(expected, alts);
-    const exp = normalizeText(expected);
-    const heard = normalizeText(best.heard || '');
-
-    if (/^[a-z]$/i.test(exp)) {
-      const aliases = LETTER_ALIASES[exp] || [exp];
-      if (aliases.includes(heard)) {
-        setCheckResult('correct');
-        return;
-      }
-    }
-
-    const score = Math.max(best.score || 0, similarity(exp, heard));
-    const firstCharMatch = exp && heard && exp[0] === heard[0];
-    const containsMatch = exp && heard && (heard.includes(exp) || exp.includes(heard));
-
-    if (score >= 0.75 || containsMatch) setCheckResult('correct');
-    else if (score >= 0.5 || firstCharMatch) setCheckResult('close');
-    else setCheckResult('wrong');
-  }, [currentWord?.word, listenOnce, recordedAudio]);
+    const result = judgeSpeech(expected, alts);
+    setCheckResult(result);
+  }, [currentWord?.word, recognizedText]);
 
   const goToNextWord = useCallback(() => {
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
@@ -494,16 +309,20 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
                 <img src={micIcon} alt="mic" className="icon-img" />
               </button>
 
-              {recordedAudio && !isRecording ? (
-                <div className="waveform">
+              {recognizedText && !isRecording ? (
+                <div className="waveform" title={recognizedText}>
                   {WAVE_BARS.map((_, i) => (
                     <div key={i} className="wave-bar" />
                   ))}
                 </div>
               ) : null}
 
-              {isRecording ? <span className="recording-text">Đang ghi âm...</span> : null}
+              {isRecording ? <span className="recording-text">Đang nghe...</span> : null}
             </div>
+
+            {/* {recognizedText && !isRecording ? (
+              <div className="recognized-text">Con nói: {recognizedText}</div>
+            ) : null} */}
           </div>
         </div>
       </div>
@@ -518,7 +337,7 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
             type="button"
             className="btn-check"
             onClick={checkPronunciation}
-            disabled={!recordedAudio || isRecording}
+            disabled={!recognizedText || isRecording}
           >
             KIỂM TRA
           </button>

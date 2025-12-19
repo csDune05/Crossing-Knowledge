@@ -1,100 +1,57 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  CreateListeningComprehensionDto,
-  SubmitListeningComprehensionDto,
-  UpdateListeningComprehensionDto,
-} from './dto/listening-comprehension.dto';
-import { ListeningComprehensionExercise } from './entities/listening-comprehension-exercise.entity';
+import { ListeningComprehensionItem } from './entities/listening-comprehension-exercise.entity';
+import { CreateListeningItemDto } from './dto/create-item.dto';
+import { UpdateListeningItemDto } from './dto/update-item.dto';
+import { SubmitListeningDto } from './dto/submit.dto';
 
 @Injectable()
 export class ListeningComprehensionService {
   constructor(
-    @InjectRepository(ListeningComprehensionExercise)
-    private readonly exerciseRepository: Repository<ListeningComprehensionExercise>,
+    @InjectRepository(ListeningComprehensionItem)
+    private readonly repo: Repository<ListeningComprehensionItem>,
   ) {}
 
-  create(createDto: CreateListeningComprehensionDto) {
-    this.ensureValidQuestions(createDto.questions);
-    const exercise = this.exerciseRepository.create(createDto);
-    return this.exerciseRepository.save(exercise);
+  async create(dto: CreateListeningItemDto) {
+    const item = this.repo.create(dto);
+    return this.repo.save(item);
   }
 
-  findAll() {
-    return this.exerciseRepository.find();
+  async findAll() {
+    return this.repo.find({ order: { id: 'ASC' } });
+  }
+
+  async findOneOrThrow(id: number) {
+    const item = await this.repo.findOne({ where: { id } });
+    if (!item) throw new NotFoundException(`Item ${id} not found`);
+    return item;
   }
 
   async findOne(id: number) {
     return this.findOneOrThrow(id);
   }
 
-  async update(id: number, updateDto: UpdateListeningComprehensionDto) {
-    const existing = await this.findOneOrThrow(id);
-    const questions = updateDto.questions ?? existing.questions;
-    this.ensureValidQuestions(questions);
-
-    await this.exerciseRepository.update(id, {
-      ...updateDto,
-      questions,
-    });
-
+  async update(id: number, dto: UpdateListeningItemDto) {
+    await this.findOneOrThrow(id);
+    await this.repo.update({ id }, dto);
     return this.findOneOrThrow(id);
   }
 
   async remove(id: number) {
-    const existing = await this.findOneOrThrow(id);
-    await this.exerciseRepository.remove(existing);
+    const item = await this.findOneOrThrow(id);
+    await this.repo.remove(item);
     return { deleted: true };
   }
 
-  async submit(
-    submitDto: SubmitListeningComprehensionDto,
-  ): Promise<{ correct: boolean; correctOptionIndex: number; questionIndex: number }> {
-    const exercise = await this.findOneOrThrow(submitDto.exerciseId);
-    const question = exercise.questions[submitDto.questionIndex];
-    if (!question) {
-      throw new BadRequestException('Question index is out of bounds');
-    }
-    if (
-      submitDto.selectedOptionIndex < 0 ||
-      submitDto.selectedOptionIndex >= question.options.length
-    ) {
-      throw new BadRequestException('Selected option index is out of bounds');
-    }
+  async submit(dto: SubmitListeningDto) {
+    const item = await this.findOneOrThrow(dto.itemId);
 
-    const correct =
-      question.correctOptionIndex === submitDto.selectedOptionIndex;
-    // In a real app, you would also save the user's progress.
-    return {
-      correct,
-      correctOptionIndex: question.correctOptionIndex,
-      questionIndex: submitDto.questionIndex,
-    };
-  }
+    const correctOption: 1 | 2 = 1; 
+    const correctText = item.option1;
 
-  private ensureValidQuestions(questions: { options: string[]; correctOptionIndex: number }[]) {
-    questions.forEach((question, index) => {
-      if (
-        question.correctOptionIndex < 0 ||
-        question.correctOptionIndex >= question.options.length
-      ) {
-        throw new BadRequestException(
-          `Correct option index is out of bounds for question ${index}`,
-        );
-      }
-    });
-  }
+    const correct = dto.selectedOption === correctOption;
 
-  private async findOneOrThrow(id: number) {
-    const exercise = await this.exerciseRepository.findOneBy({ id });
-    if (!exercise) {
-      throw new NotFoundException(`Exercise with ID ${id} not found`);
-    }
-    return exercise;
+    return { correct, correctOption, correctText };
   }
 }

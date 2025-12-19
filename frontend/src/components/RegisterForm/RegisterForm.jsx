@@ -21,18 +21,20 @@ const RegisterForm = () => {
 
   const onFinish = async (values) => {
     const payload = {
+      fullName: (values.fullName || "").trim(),
+      phone: (values.phone || "").trim(),
       username: (values.username || "").trim(),
       email: (values.email || "").trim(),
       password: values.password,
     };
 
     try {
-      const createdUser = await dispatch(registerThunk(payload)).unwrap();
+      const { user } = await dispatch(registerThunk(payload)).unwrap();
       message.success("Tạo tài khoản thành công!");
-      console.log("Created user:", createdUser);
+      console.log("Created user:", user);
 
       form.resetFields();
-      // TODO: navigate("/login");
+      navigate("/progress");
     } catch (errMsg) {
       message.error(errMsg || "Đăng ký thất bại");
     }
