@@ -2,7 +2,7 @@ import "./SentenceConstructionCard.css";
 import lessonCardBackground from "../../assets/lesson-card-background.png";
 
 const SentenceConstructionCard = ({ index, exercise, onClick }) => {
-  console.log("Rendering SentenceConstructionCard with exercise:", exercise);
+  console.log("in exercise card, exercise = :", exercise);
   return (
     <div className="sentence-card-container" onClick={onClick}>
       <div

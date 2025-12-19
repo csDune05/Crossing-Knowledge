@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Spin, Empty } from "antd";
@@ -12,18 +12,12 @@ import {
 } from "../../redux/selectors/sentenceConstructionSelectors";
 
 import "./SentenceConstructionLessons.css";
-import { MOCK_SENTENCE_EXERCISES } from "../../mock/sentenceConstructionMock";
 
 const SentenceConstructionLessons = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  //   const exercises = useSelector(sentenceExercisesSelector) || [];
-  const exercisesFromApi = useSelector(sentenceExercisesSelector) || [];
-  const exercises =
-    exercisesFromApi && exercisesFromApi.length > 0
-      ? exercisesFromApi
-      : MOCK_SENTENCE_EXERCISES;
+  const exercises = useSelector(sentenceExercisesSelector) || [];
   const loading = useSelector(sentenceExercisesLoadingSelector);
   const error = useSelector(sentenceExercisesErrorSelector);
 
@@ -31,8 +25,29 @@ const SentenceConstructionLessons = () => {
     dispatch(fetchSentenceExercisesThunk());
   }, [dispatch]);
 
-  const handleCardClick = (exerciseId) => {
-    navigate(`/sentence-construction/${exerciseId}`);
+  // 24 exercises -> 12 lessons, each lesson has 2 questions
+  const lessons = useMemo(() => {
+    const res = [];
+    for (let i = 0; i < exercises.length; i += 2) {
+      const q1 = exercises[i];
+      const q2 = exercises[i + 1];
+
+      res.push({
+        id: i / 2 + 1, // lessonId: 1..12
+        level: q1?.level || "easy",
+        // keep this field name so Card won't break if it expects scrambledWords
+        scrambledWords: q1?.scrambledWords || [],
+        // store real questions for detail page usage if needed later
+        questions: [q1, q2].filter(Boolean),
+        questionCount: [q1, q2].filter(Boolean).length,
+      });
+    }
+    return res;
+  }, [exercises]);
+
+  const handleCardClick = (lessonId) => {
+    // lessonId, NOT exerciseId
+    navigate(`/sentence-construction/${lessonId}`);
   };
 
   return (
@@ -49,18 +64,18 @@ const SentenceConstructionLessons = () => {
         <div className="sentence-lessons-error">
           Đã xảy ra lỗi khi tải bài tập: {error}
         </div>
-      ) : !exercises.length ? (
+      ) : !lessons.length ? (
         <div className="sentence-lessons-empty">
           <Empty description="Hiện chưa có bài luyện diễn đạt nào." />
         </div>
       ) : (
         <Row gutter={[24, 24]} className="sentence-lessons-grid">
-          {exercises.map((exercise, index) => (
-            <Col key={exercise.id} xs={24} sm={12} md={12} lg={6}>
+          {lessons.map((lesson, index) => (
+            <Col key={lesson.id} xs={24} sm={12} md={12} lg={6}>
               <SentenceConstructionCard
                 index={index}
-                exercise={exercise}
-                onClick={() => handleCardClick(exercise.id)}
+                exercise={lesson}
+                onClick={() => handleCardClick(lesson.id)}
               />
             </Col>
           ))}

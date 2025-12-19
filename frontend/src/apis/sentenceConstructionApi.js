@@ -1,23 +1,22 @@
+// sentenceConstructionApi.js
 import axiosClient from "./axiosClient";
 
 const sentenceConstructionApi = {
-  // GET /sentence-construction/exercises
-  getExercises() {
-    return axiosClient.get("/sentence-construction/exercises");
-  },
+  // keep names that your slice is using
+  getExercises: () => axiosClient.get("/sentence-construction/exercises"),
+  getExerciseDetail: (id) =>
+    axiosClient.get(`/sentence-construction/exercises/${id}`),
 
-  // GET /sentence-construction/exercises/:id
-  getExerciseDetail(id) {
-    return axiosClient.get(`/sentence-construction/exercises/${id}`);
-  },
-
-  // POST /sentence-construction/submit
-  submitAnswer(exerciseId, submittedWords) {
-    return axiosClient.post("/sentence-construction/submit", {
+  submitAnswer: (exerciseId, submittedWords) =>
+    axiosClient.post("/sentence-construction/submit", {
       exerciseId,
       submittedWords,
-    });
-  },
+    }),
+
+  // (optional aliases if you want)
+  getLessons: () => axiosClient.get("/sentence-construction/exercises"),
+  getLessonDetail: (id) =>
+    axiosClient.get(`/sentence-construction/exercises/${id}`),
 };
 
 export default sentenceConstructionApi;
