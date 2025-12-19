@@ -1,5 +1,5 @@
 import "./SentenceConstructionLessonDetail.css";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Spin } from "antd";
 import { CheckCircleFilled } from "@ant-design/icons";
 import { ImCross } from "react-icons/im";
@@ -7,15 +7,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
-  fetchSentenceExerciseDetailThunk,
+  fetchSentenceExercisesThunk,
   submitSentenceAnswerThunk,
   resetSentenceResult,
 } from "../../redux/slices/sentenceConstructionSlice";
 
 import {
-  currentSentenceExerciseSelector,
-  sentenceExerciseDetailLoadingSelector,
-  sentenceExerciseDetailErrorSelector,
+  sentenceLessonByIdSelector,
+  sentenceExercisesSelector,
+  sentenceExercisesLoadingSelector,
+  sentenceExercisesErrorSelector,
   sentenceSubmittingSelector,
   sentenceSubmitErrorSelector,
   sentenceLastResultSelector,
@@ -25,12 +26,16 @@ import {
 const SentenceConstructionLessonDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { exerciseId } = useParams(); // this could be lessonId OR exerciseId depending on BE
-  const idFromRoute = Number(exerciseId);
+  const { exerciseId } = useParams(); // lessonId in FE
+  const lessonId = Number(exerciseId);
 
-  const data = useSelector(currentSentenceExerciseSelector); // could be lesson or single exercise
-  const loading = useSelector(sentenceExerciseDetailLoadingSelector);
-  const error = useSelector(sentenceExerciseDetailErrorSelector);
+  const exercises = useSelector(sentenceExercisesSelector) || [];
+  const loading = useSelector(sentenceExercisesLoadingSelector);
+  const error = useSelector(sentenceExercisesErrorSelector);
+
+  const lesson = useSelector((state) =>
+    sentenceLessonByIdSelector(state, lessonId)
+  );
 
   const submitting = useSelector(sentenceSubmittingSelector);
   const submitError = useSelector(sentenceSubmitErrorSelector);
@@ -39,54 +44,42 @@ const SentenceConstructionLessonDetail = () => {
     sentenceLastSubmittedExerciseIdSelector
   );
 
-  /* one lesson has several questions */
+  const questions = useMemo(() => lesson?.questions || [], [lesson]);
+  const numberOfQuestions = questions.length;
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // local UI state (same as your original)
+  const currentQuestion = questions[currentQuestionIndex];
+  const scrambledWords = currentQuestion?.scrambledWords || [];
+
   const [scrambledWordsStatus, setScrambleWordsStatus] = useState([]);
   const [selectedWordsIndex, setSelectedWordsIndex] = useState([]);
   const [checkableButton, setCheckableButton] = useState(false);
 
+  // Ensure we have list data (works on refresh)
   useEffect(() => {
-    if (!Number.isFinite(idFromRoute)) return;
-    dispatch(fetchSentenceExerciseDetailThunk(idFromRoute));
-    dispatch(resetSentenceResult());
+    if (!exercises.length) dispatch(fetchSentenceExercisesThunk());
+  }, [dispatch, exercises.length]);
+
+  // When lesson changes, reset question index + result
+  useEffect(() => {
+    if (!Number.isFinite(lessonId)) return;
     setCurrentQuestionIndex(0);
-  }, [dispatch, idFromRoute]);
+    dispatch(resetSentenceResult());
+  }, [dispatch, lessonId]);
 
-  // ===== normalize API shape =====
-  // Case A: BE returns a lesson: { id, level, questionCount, questions: [...] }
-  // Case B: BE returns a single exercise: { id, level, scrambledWords, correctSentences }
-  const questions = Array.isArray(data?.questions)
-    ? data.questions
-    : data?.scrambledWords
-      ? [
-          {
-            id: data.id,
-            level: data.level,
-            scrambledWords: data.scrambledWords,
-            correctSentences: data.correctSentences,
-          },
-        ]
-      : [];
-
-  const numberOfQuestions = questions.length;
-  const currentQuestion = questions[currentQuestionIndex];
-  const scrambledWords = currentQuestion?.scrambledWords || [];
-
-  // only show result if it belongs to current question id
+  // Only show result if it belongs to current QUESTION id
   const isCorrect =
     currentQuestion && lastSubmittedExerciseId === currentQuestion.id
       ? (lastResult?.correct ?? null)
       : null;
 
-  // reset UI when question changes
+  // Reset UI when question changes
   useEffect(() => {
     setScrambleWordsStatus(Array(scrambledWords.length).fill(false));
     setSelectedWordsIndex([]);
     setCheckableButton(false);
     dispatch(resetSentenceResult());
-    // keep it consistent with your comments/logic
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, scrambledWords.length]);
 
@@ -99,59 +92,50 @@ const SentenceConstructionLessonDetail = () => {
   };
 
   const handleScrambledWordClick = (index) => {
-    /* if the word is already selected, return */
     if (scrambledWordsStatus[index]) return;
 
-    // if previous result is incorrect, user edits → clear result UI
+    // if wrong then user edits -> clear result + force re-check flow
     if (isCorrect === false) {
       dispatch(resetSentenceResult());
     }
 
-    const newScrambledWordsStatus = scrambledWordsStatus.map((status, id) =>
-      id === index ? true : status
+    const newStatus = scrambledWordsStatus.map((s, i) =>
+      i === index ? true : s
     );
-    setScrambleWordsStatus(newScrambledWordsStatus);
+    setScrambleWordsStatus(newStatus);
 
-    const newSelectedWordsIndex = [...selectedWordsIndex, index];
-    setSelectedWordsIndex(newSelectedWordsIndex);
+    const newSelected = [...selectedWordsIndex, index];
+    setSelectedWordsIndex(newSelected);
 
-    /*check status of button */
-    setCheckableButton(newSelectedWordsIndex.length === scrambledWords.length);
+    setCheckableButton(newSelected.length === scrambledWords.length);
   };
 
   const handleSelectedWordClick = (index) => {
-    /*original index of that word*/
     const scrambledWordIndex = selectedWordsIndex[index];
 
-    // if previous result is incorrect, user edits → clear result UI
     if (isCorrect === false) {
       dispatch(resetSentenceResult());
     }
 
-    /*give the word back to the scrambled words array*/
-    const newScrambledWordsStatus = scrambledWordsStatus.map((status, id) =>
-      id === scrambledWordIndex ? false : status
+    const newStatus = scrambledWordsStatus.map((s, i) =>
+      i === scrambledWordIndex ? false : s
     );
-    setScrambleWordsStatus(newScrambledWordsStatus);
+    setScrambleWordsStatus(newStatus);
 
-    /*delete that word from seleted words array*/
-    const newSelectedWordsIndex = selectedWordsIndex.filter(
-      (_, id) => id !== index
-    );
-    setSelectedWordsIndex(newSelectedWordsIndex);
+    const newSelected = selectedWordsIndex.filter((_, i) => i !== index);
+    setSelectedWordsIndex(newSelected);
 
-    /*check status of button */
-    setCheckableButton(newSelectedWordsIndex.length === scrambledWords.length);
+    setCheckableButton(newSelected.length === scrambledWords.length);
   };
 
   const handleButtonClick = () => {
-    // only correct → next
+    // correct -> next
     if (isCorrect === true) {
       goNextQuestion();
       return;
     }
 
-    // not enough words → skip
+    // not enough words -> skip
     if (!checkableButton) {
       goNextQuestion();
       return;
@@ -163,7 +147,7 @@ const SentenceConstructionLessonDetail = () => {
 
     dispatch(
       submitSentenceAnswerThunk({
-        exerciseId: currentQuestion.id, // IMPORTANT: question id
+        exerciseId: currentQuestion.id, // QUESTION id
         submittedWords,
       })
     );
@@ -172,7 +156,7 @@ const SentenceConstructionLessonDetail = () => {
   const buttonText =
     isCorrect === true ? "Tiếp" : checkableButton ? "Kiểm tra" : "Bỏ qua";
 
-  // ===== UI states =====
+  // UI states
   if (loading) {
     return (
       <div className="sentence-construction-lesson-detail-container">
@@ -201,7 +185,6 @@ const SentenceConstructionLessonDetail = () => {
     );
   }
 
-  // ===== keep your DOM structure to not break CSS =====
   return (
     <div className="sentence-construction-lesson-detail-container">
       <div className="progress-blocks">
@@ -212,7 +195,7 @@ const SentenceConstructionLessonDetail = () => {
             className={`progress-block progress-block${
               index < currentQuestionIndex ? "--completed" : "--pending"
             }`}
-          ></div>
+          />
         ))}
       </div>
 
