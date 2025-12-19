@@ -42,12 +42,15 @@ export class SentenceConstructionService {
 
   async submit(
     submitDto: SubmitSentenceConstructionDto,
-  ): Promise<{ correct: boolean; correctSentence: string; correctSentences: string[] }> {
+  ): Promise<{
+    correct: boolean;
+    correctSentence: string;
+    correctSentences: string[];
+  }> {
     const exercise = await this.findOneOrThrow(submitDto.exerciseId);
     const submittedSentence = submitDto.submittedWords.join(' ');
 
-    const correct =
-      exercise.correctSentences.includes(submittedSentence);
+    const correct = exercise.correctSentences.includes(submittedSentence);
     // In a real app, you would also save the user's progress.
     return {
       correct,

@@ -5,15 +5,15 @@ import sentenceConstructionApi from "../../apis/sentenceConstructionApi";
    THUNKS
    ======================================================= */
 
-// Lấy toàn bộ bài tập (để render grid BÀI 1–N)
+// Lấy toàn bộ bài tập (24 questions)
 export const fetchSentenceExercisesThunk = createAsyncThunk(
   "sentenceConstruction/fetchExercises",
   async (_, { rejectWithValue }) => {
     try {
+      // axiosClient already returns response.data
       const res = await sentenceConstructionApi.getExercises();
-      return res.data;
+      return res;
     } catch (error) {
-      // giữ format giống các slice khác
       return rejectWithValue(
         error.response?.data || { message: "Không thể tải danh sách bài tập" }
       );
@@ -21,13 +21,21 @@ export const fetchSentenceExercisesThunk = createAsyncThunk(
   }
 );
 
-// Lấy chi tiết 1 bài tập (màn hình làm bài)
 export const fetchSentenceExerciseDetailThunk = createAsyncThunk(
   "sentenceConstruction/fetchExerciseDetail",
-  async (exerciseId, { rejectWithValue }) => {
+  async (lessonId, { rejectWithValue, getState }) => {
     try {
-      const res = await sentenceConstructionApi.getExerciseDetail(exerciseId);
-      return res.data;
+      const state = getState();
+      const fromList = state.sentenceConstruction.exercises?.find(
+        (x) => x.id === Number(lessonId)
+      );
+
+      if (fromList && Array.isArray(fromList.questions)) {
+        return fromList;
+      }
+
+      const res = await sentenceConstructionApi.getExerciseDetail(lessonId);
+      return res; // ✅ axiosClient already returns data
     } catch (error) {
       return rejectWithValue(
         error.response?.data || { message: "Không thể tải bài tập" }
@@ -45,7 +53,7 @@ export const submitSentenceAnswerThunk = createAsyncThunk(
         exerciseId,
         submittedWords
       );
-      return res.data; // { correct, correctSentence }
+      return res; // { correct, correctSentence, correctSentences }
     } catch (error) {
       return rejectWithValue(
         error.response?.data || { message: "Không thể gửi đáp án" }
@@ -64,17 +72,16 @@ const initialState = {
   loadingExercises: false,
   exercisesError: null,
 
-  // detail page
-  currentExercise: null, // {id, scrambledWords, correctSentence, level}
+  // detail page (optional)
+  currentExercise: null,
   loadingExerciseDetail: false,
   exerciseDetailError: null,
 
   // submit answer
   submitting: false,
   submitError: null,
-  lastResult: null, // { correct, correctSentence }
+  lastResult: null,
 
-  // optional: để biết bé vừa làm bài nào xong
   lastSubmittedExerciseId: null,
 };
 
@@ -98,7 +105,7 @@ const sentenceConstructionSlice = createSlice({
       })
       .addCase(fetchSentenceExercisesThunk.fulfilled, (state, action) => {
         state.loadingExercises = false;
-        state.exercises = action.payload;
+        state.exercises = action.payload || [];
       })
       .addCase(fetchSentenceExercisesThunk.rejected, (state, action) => {
         state.loadingExercises = false;
@@ -106,12 +113,11 @@ const sentenceConstructionSlice = createSlice({
           action.payload?.message || "Không thể tải danh sách bài tập";
       });
 
-    /* ---------- fetch detail ---------- */
+    /* ---------- fetch detail (optional) ---------- */
     builder
       .addCase(fetchSentenceExerciseDetailThunk.pending, (state) => {
         state.loadingExerciseDetail = true;
         state.exerciseDetailError = null;
-        // khi load bài mới, clear kết quả cũ
         state.lastResult = null;
         state.submitError = null;
         state.lastSubmittedExerciseId = null;
@@ -134,10 +140,10 @@ const sentenceConstructionSlice = createSlice({
       })
       .addCase(submitSentenceAnswerThunk.fulfilled, (state, action) => {
         state.submitting = false;
-        state.lastResult = action.payload; // { correct, correctSentence }
-        if (state.currentExercise) {
-          state.lastSubmittedExerciseId = state.currentExercise.id;
-        }
+        state.lastResult = action.payload;
+
+        // IMPORTANT: store the QUESTION id that was submitted
+        state.lastSubmittedExerciseId = action.meta.arg.exerciseId;
       })
       .addCase(submitSentenceAnswerThunk.rejected, (state, action) => {
         state.submitting = false;
