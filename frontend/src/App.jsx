@@ -11,7 +11,17 @@ import SentenceConstructionPage from "./pages/SentenceConstructionPage.jsx";
 import SentenceConstructionLessonDetail from "./components/SentenceConstructionLessonDetail/SentenceConstructionLessonDetail.jsx";
 import ListenPage from "./pages/ListeningComprehensionPage.jsx";
 
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { hydrateAuthFromStorage } from "./redux/slices/authSlice";
+
 const App = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(hydrateAuthFromStorage());
+  }, [dispatch]);
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -20,12 +30,15 @@ const App = () => {
 
       <Route element={<AppLayout />}>
         <Route path="/progress" element={<ProgressPage />} />
-        
+
         <Route path="/vocabulary" element={<VocabPage />} />
         <Route path="/vocabulary/:lessonId" element={<VocabPage />} />
-        
+
         <Route path="/listening-comprehension" element={<ListenPage />} />
-        <Route path="/listening-comprehension/:lessonId" element={<ListenPage />} />
+        <Route
+          path="/listening-comprehension/:lessonId"
+          element={<ListenPage />}
+        />
 
         <Route
           path="/sentence-construction"

@@ -32,7 +32,8 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const secret = this.configService.get<string>('JWT_SECRET') ?? 'dev-secret';
+      const secret =
+        this.configService.get<string>('JWT_SECRET') ?? 'dev-secret';
       const payload = verify(token, secret);
       request.user = payload;
       return true;
@@ -42,7 +43,8 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private extractToken(request: any): string | null {
-    const authHeader = request.headers['authorization'] || request.headers['Authorization'];
+    const authHeader =
+      request.headers['authorization'] || request.headers['Authorization'];
     if (!authHeader || typeof authHeader !== 'string') return null;
     const [scheme, token] = authHeader.split(' ');
     if (scheme?.toLowerCase() !== 'bearer' || !token) return null;
