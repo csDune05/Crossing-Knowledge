@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './VocabularyLessonDetail.css';
 import vocabularyApi from '../../apis/vocabularyApi';
+import pronunciationApi from '../../apis/pronunciationApi';
 
 import audioIcon from '../../assets/vocabulary/audio.png';
 import slowIcon from '../../assets/vocabulary/slow.png';
@@ -318,7 +319,7 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
     setIsRecording(false);
   }, []);
 
-  const checkPronunciation = useCallback(() => {
+  const checkPronunciation = useCallback(async () => {
     const expected = (currentWord?.word || '').trim();
 
     const alts =
@@ -343,8 +344,15 @@ export default function VocabularyLessonDetail({ lesson, onBack }) {
     setCheckResult(result);
 
     // NLP hint dưới dòng đánh giá
-    const hint = buildNlpHint(expected, bestAlt || recognizedText, result);
-    setNlpHint(hint);
+  try {
+      const resp = await pronunciationApi.evaluate({
+        expectedText: expected,
+        spokenText: bestAlt || recognizedText,
+      });
+      setNlpHint(resp?.hint || buildNlpHint(expected, bestAlt || recognizedText, result));
+    } catch (e) {
+      setNlpHint(buildNlpHint(expected, bestAlt || recognizedText, result));
+    }
   }, [currentWord?.word, recognizedText]);
 
   const goToNextWord = useCallback(() => {

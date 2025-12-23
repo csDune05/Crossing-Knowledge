@@ -1,0 +1,174 @@
+{
+  "lessons": [
+    {
+      "lessonNo": 1,
+      "level": "easy",
+      "exercises": [
+        {
+          "scrambledWords": ["A", "chữ", "Bé", "học"],
+          "correctSentences": ["Bé học chữ A"]
+        },
+        {
+          "scrambledWords": ["B", "chữ", "Con", "viết"],
+          "correctSentences": ["Con viết chữ B"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 2,
+      "level": "easy",
+      "exercises": [
+        {
+          "scrambledWords": ["đỏ", "màu", "Quả", "táo"],
+          "correctSentences": ["Quả táo màu đỏ"]
+        },
+        {
+          "scrambledWords": ["xanh", "màu", "trời", "Bầu"],
+          "correctSentences": ["Bầu trời màu xanh"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 3,
+      "level": "easy",
+      "exercises": [
+        {
+          "scrambledWords": ["hai", "quả", "Con", "bóng", "có"],
+          "correctSentences": ["Con có hai quả bóng"]
+        },
+        {
+          "scrambledWords": ["ba", "con", "mèo", "Bé", "đếm"],
+          "correctSentences": ["Bé đếm ba con mèo"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 4,
+      "level": "easy",
+      "exercises": [
+        {
+          "scrambledWords": ["đẹp", "rất", "tròn", "Hình"],
+          "correctSentences": ["Hình tròn rất đẹp"]
+        },
+        {
+          "scrambledWords": ["bàn", "vuông", "hình", "Cái"],
+          "correctSentences": ["Cái bàn hình vuông"]
+        }
+      ]
+    },
+
+    {
+      "lessonNo": 5,
+      "level": "medium",
+      "exercises": [
+        {
+          "scrambledWords": ["cơm", "thích", "ăn", "nóng", "Bé"],
+          "correctSentences": ["Bé thích ăn cơm nóng"]
+        },
+        {
+          "scrambledWords": ["mỗi", "ngày", "uống", "sữa", "Con"],
+          "correctSentences": ["Con uống sữa mỗi ngày"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 6,
+      "level": "medium",
+      "exercises": [
+        {
+          "scrambledWords": ["khi", "vui", "được", "khen", "Bé"],
+          "correctSentences": ["Bé vui khi được khen"]
+        },
+        {
+          "scrambledWords": ["buồn", "đồ", "chơi", "mất", "vì", "Con"],
+          "correctSentences": ["Con buồn vì mất đồ chơi"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 7,
+      "level": "medium",
+      "exercises": [
+        {
+          "scrambledWords": ["áo", "khoác", "ấm", "mặc", "Bé"],
+          "correctSentences": ["Bé mặc áo khoác ấm"]
+        },
+        {
+          "scrambledWords": ["trắng", "màu", "giày", "đi", "Con"],
+          "correctSentences": ["Con đi giày màu trắng"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 8,
+      "level": "medium",
+      "exercises": [
+        {
+          "scrambledWords": ["rất", "nhanh", "chạy", "chó", "Con"],
+          "correctSentences": ["Con chó chạy rất nhanh"]
+        },
+        {
+          "scrambledWords": ["ghế", "trên", "ngủ", "mèo", "Con"],
+          "correctSentences": ["Con mèo ngủ trên ghế"]
+        }
+      ]
+    },
+
+    {
+      "lessonNo": 9,
+      "level": "hard",
+      "exercises": [
+        {
+          "scrambledWords": ["sách", "đến", "lớp", "học", "mang", "Bé"],
+          "correctSentences": ["Bé mang sách đến lớp học"]
+        },
+        {
+          "scrambledWords": ["con", "đọc", "chữ", "dạy", "giáo", "Cô"],
+          "correctSentences": ["Cô giáo dạy con đọc chữ"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 10,
+      "level": "hard",
+      "exercises": [
+        {
+          "scrambledWords": ["trước", "khi", "ăn", "rửa", "tay", "Con"],
+          "correctSentences": ["Con rửa tay trước khi ăn"]
+        },
+        {
+          "scrambledWords": ["mỗi", "tối", "đánh", "răng", "Bé"],
+          "correctSentences": ["Bé đánh răng mỗi tối"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 11,
+      "level": "hard",
+      "exercises": [
+        {
+          "scrambledWords": ["trong", "nhà", "nhỏ", "ở", "Gia", "đình", "con"],
+          "correctSentences": ["Gia đình con ở trong nhà nhỏ"]
+        },
+        {
+          "scrambledWords": ["gió", "mát", "đón", "mở", "sổ", "Cửa"],
+          "correctSentences": ["Cửa sổ mở đón gió mát"]
+        }
+      ]
+    },
+    {
+      "lessonNo": 12,
+      "level": "hard",
+      "exercises": [
+        {
+          "scrambledWords": ["mũ", "bảo", "hiểm", "khi", "đội", "đi", "xe", "Con"],
+          "correctSentences": ["Con đội mũ bảo hiểm khi đi xe"]
+        },
+        {
+          "scrambledWords": ["đèn", "đỏ", "bật", "thì", "dừng", "lại", "con"],
+          "correctSentences": ["Đèn đỏ bật thì con dừng lại"]
+        }
+      ]
+    }
+  ]
+}
