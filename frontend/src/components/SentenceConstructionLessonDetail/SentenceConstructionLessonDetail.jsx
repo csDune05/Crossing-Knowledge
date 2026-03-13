@@ -201,7 +201,7 @@ const SentenceConstructionLessonDetail = () => {
 
       <div className="question-content">
         <div className="prompt">
-          Be hay sap xep cac tu duoi day thanh mot cau dung.
+          Bé sắp xếp các từ dưới đây thành một câu đúng.
         </div>
 
         <div className="main-question-wrapper">
@@ -267,7 +267,7 @@ const SentenceConstructionLessonDetail = () => {
 
             <div className="sentence-result-text-block">
               <div className="sentence-result-text">
-                {isCorrect ? "Tuyet!" : "Con thu lai nhe!"}
+                {isCorrect ? "Tuyệt!" : "Con thử lại nhé!"}
               </div>
             </div>
           </div>
