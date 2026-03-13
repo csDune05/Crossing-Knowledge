@@ -1,6 +1,6 @@
 import "./SentenceConstructionLessonDetail.css";
 import { useEffect, useMemo, useState } from "react";
-import { Button, Spin } from "antd";
+import { Spin } from "antd";
 import { CheckCircleFilled } from "@ant-design/icons";
 import { ImCross } from "react-icons/im";
 import { useNavigate, useParams } from "react-router-dom";
@@ -26,7 +26,7 @@ import {
 const SentenceConstructionLessonDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { exerciseId } = useParams(); // lessonId in FE
+  const { exerciseId } = useParams();
   const lessonId = Number(exerciseId);
 
   const exercises = useSelector(sentenceExercisesSelector) || [];
@@ -56,30 +56,30 @@ const SentenceConstructionLessonDetail = () => {
   const [selectedWordsIndex, setSelectedWordsIndex] = useState([]);
   const [checkableButton, setCheckableButton] = useState(false);
 
-  // Ensure we have list data (works on refresh)
   useEffect(() => {
     if (!exercises.length) dispatch(fetchSentenceExercisesThunk());
   }, [dispatch, exercises.length]);
 
-  // When lesson changes, reset question index + result
   useEffect(() => {
     if (!Number.isFinite(lessonId)) return;
     setCurrentQuestionIndex(0);
     dispatch(resetSentenceResult());
   }, [dispatch, lessonId]);
 
-  // Only show result if it belongs to current QUESTION id
   const isCorrect =
     currentQuestion && lastSubmittedExerciseId === currentQuestion.id
       ? (lastResult?.correct ?? null)
       : null;
 
-  // Reset UI when question changes
-  useEffect(() => {
+  const resetCurrentAttempt = () => {
     setScrambleWordsStatus(Array(scrambledWords.length).fill(false));
     setSelectedWordsIndex([]);
     setCheckableButton(false);
     dispatch(resetSentenceResult());
+  };
+
+  useEffect(() => {
+    resetCurrentAttempt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, scrambledWords.length]);
 
@@ -92,50 +92,45 @@ const SentenceConstructionLessonDetail = () => {
   };
 
   const handleScrambledWordClick = (index) => {
-    if (scrambledWordsStatus[index]) return;
+    if (scrambledWordsStatus[index] || isCorrect !== null) return;
 
-    // if wrong then user edits -> clear result + force re-check flow
-    if (isCorrect === false) {
-      dispatch(resetSentenceResult());
-    }
-
-    const newStatus = scrambledWordsStatus.map((s, i) =>
-      i === index ? true : s
+    const newStatus = scrambledWordsStatus.map((status, currentIndex) =>
+      currentIndex === index ? true : status
     );
-    setScrambleWordsStatus(newStatus);
-
     const newSelected = [...selectedWordsIndex, index];
-    setSelectedWordsIndex(newSelected);
 
+    setScrambleWordsStatus(newStatus);
+    setSelectedWordsIndex(newSelected);
     setCheckableButton(newSelected.length === scrambledWords.length);
   };
 
   const handleSelectedWordClick = (index) => {
+    if (isCorrect !== null) return;
+
     const scrambledWordIndex = selectedWordsIndex[index];
-
-    if (isCorrect === false) {
-      dispatch(resetSentenceResult());
-    }
-
-    const newStatus = scrambledWordsStatus.map((s, i) =>
-      i === scrambledWordIndex ? false : s
+    const newStatus = scrambledWordsStatus.map((status, currentIndex) =>
+      currentIndex === scrambledWordIndex ? false : status
     );
+    const newSelected = selectedWordsIndex.filter(
+      (_, currentIndex) => currentIndex !== index
+    );
+
     setScrambleWordsStatus(newStatus);
-
-    const newSelected = selectedWordsIndex.filter((_, i) => i !== index);
     setSelectedWordsIndex(newSelected);
-
     setCheckableButton(newSelected.length === scrambledWords.length);
   };
 
   const handleButtonClick = () => {
-    // correct -> next
     if (isCorrect === true) {
       goNextQuestion();
       return;
     }
 
-    // not enough words -> skip
+    if (isCorrect === false) {
+      resetCurrentAttempt();
+      return;
+    }
+
     if (!checkableButton) {
       goNextQuestion();
       return;
@@ -143,20 +138,25 @@ const SentenceConstructionLessonDetail = () => {
 
     if (!currentQuestion) return;
 
-    const submittedWords = selectedWordsIndex.map((idx) => scrambledWords[idx]);
+    const submittedWords = selectedWordsIndex.map((index) => scrambledWords[index]);
 
     dispatch(
       submitSentenceAnswerThunk({
-        exerciseId: currentQuestion.id, // QUESTION id
+        exerciseId: currentQuestion.id,
         submittedWords,
       })
     );
   };
 
   const buttonText =
-    isCorrect === true ? "Tiếp" : checkableButton ? "Kiểm tra" : "Bỏ qua";
+    isCorrect === true
+      ? "Tiếp"
+      : isCorrect === false
+        ? "Thử lại"
+        : checkableButton
+          ? "Kiểm tra"
+          : "Bỏ qua";
 
-  // UI states
   if (loading) {
     return (
       <div className="sentence-construction-lesson-detail-container">
@@ -171,7 +171,7 @@ const SentenceConstructionLessonDetail = () => {
     return (
       <div className="sentence-construction-lesson-detail-container">
         <div className="sentence-lessons-error">
-          Đã xảy ra lỗi khi tải bài: {error}
+          Da xay ra loi khi tai bai: {error}
         </div>
       </div>
     );
@@ -180,7 +180,7 @@ const SentenceConstructionLessonDetail = () => {
   if (!numberOfQuestions) {
     return (
       <div className="sentence-construction-lesson-detail-container">
-        <div className="sentence-lessons-error">Không có dữ liệu bài.</div>
+        <div className="sentence-lessons-error">Khong co du lieu bai.</div>
       </div>
     );
   }
@@ -188,9 +188,9 @@ const SentenceConstructionLessonDetail = () => {
   return (
     <div className="sentence-construction-lesson-detail-container">
       <div className="progress-blocks">
-        {questions.map((q, index) => (
+        {questions.map((question, index) => (
           <div
-            key={q.id}
+            key={question.id}
             style={{ width: `${100 / numberOfQuestions}%` }}
             className={`progress-block progress-block${
               index < currentQuestionIndex ? "--completed" : "--pending"
@@ -201,7 +201,7 @@ const SentenceConstructionLessonDetail = () => {
 
       <div className="question-content">
         <div className="prompt">
-          Bé hãy sắp xếp các từ dưới đây thành một câu đúng.
+          Be hay sap xep cac tu duoi day thanh mot cau dung.
         </div>
 
         <div className="main-question-wrapper">
@@ -209,7 +209,7 @@ const SentenceConstructionLessonDetail = () => {
             {selectedWordsIndex.map((scrambledWordIndex, index) => (
               <div
                 className="selected-word"
-                key={index}
+                key={`${scrambledWordIndex}-${index}`}
                 onClick={() => handleSelectedWordClick(index)}
               >
                 {scrambledWords[scrambledWordIndex]}
@@ -223,7 +223,7 @@ const SentenceConstructionLessonDetail = () => {
                 className={`scrambled-word scrambled-word${
                   status ? "--selected" : ""
                 }`}
-                key={index}
+                key={`${scrambledWords[index]}-${index}`}
                 onClick={() => handleScrambledWordClick(index)}
               >
                 {status ? "" : scrambledWords[index]}
@@ -233,49 +233,63 @@ const SentenceConstructionLessonDetail = () => {
         </div>
       </div>
 
-      <div
-        className={`result-area result-area${
-          isCorrect == true
-            ? "--correct"
-            : isCorrect == false
-              ? "--incorrect"
-              : ""
-        }`}
-      >
-        <div className="result-text-wrapper">
-          {isCorrect == true ? (
-            <>
-              <CheckCircleFilled className="icon icon--correct" />
-              <div className="text text--correct">Tuyệt!</div>
-            </>
-          ) : isCorrect == false ? (
-            <>
-              <ImCross className="icon icon--incorrect" />
-              <div className="text text--incorrect">Con thử lại nhé!!</div>
-            </>
-          ) : (
-            ""
-          )}
-        </div>
-
-        <Button
-          className={`btn 
-            btn${checkableButton ? "--checkable" : "--uncheckable"}
-            btn${isCorrect == true ? "--correct" : isCorrect == false ? "--incorrect" : ""}`}
-          onClick={handleButtonClick}
-          disabled={submitting}
-        >
-          {buttonText}
-        </Button>
-      </div>
-
-      {submitError ? (
-        <div style={{ textAlign: "center", color: "red", marginTop: 8 }}>
-          {submitError}
+      {isCorrect === null ? (
+        <div className="sentence-check-section">
+          <button
+            type="button"
+            className={`sentence-action-btn ${
+              checkableButton
+                ? "sentence-action-btn--check"
+                : "sentence-action-btn--skip"
+            }`}
+            onClick={handleButtonClick}
+            disabled={submitting}
+          >
+            {buttonText}
+          </button>
         </div>
       ) : (
-        ""
+        <div
+          className={`sentence-result-bar ${
+            isCorrect
+              ? "sentence-result-bar--correct"
+              : "sentence-result-bar--wrong"
+          }`}
+        >
+          <div className="sentence-result-content">
+            <span className="sentence-result-icon">
+              {isCorrect ? (
+                <CheckCircleFilled className="sentence-icon sentence-icon--correct" />
+              ) : (
+                <ImCross className="sentence-icon sentence-icon--wrong" />
+              )}
+            </span>
+
+            <div className="sentence-result-text-block">
+              <div className="sentence-result-text">
+                {isCorrect ? "Tuyet!" : "Con thu lai nhe!"}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={`sentence-result-action ${
+              isCorrect
+                ? "sentence-result-action--next"
+                : "sentence-result-action--retry"
+            }`}
+            onClick={handleButtonClick}
+            disabled={submitting}
+          >
+            {buttonText}
+          </button>
+        </div>
       )}
+
+      {submitError ? (
+        <div className="sentence-submit-error">{submitError}</div>
+      ) : null}
     </div>
   );
 };
